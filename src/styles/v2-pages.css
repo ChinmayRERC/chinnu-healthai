@@ -442,7 +442,7 @@
   object-fit: cover;
   object-position: 48% center;
   transform: scale(1.02);
-  animation: onboarding-drift 18s var(--ease-in-out) infinite alternate;
+  animation: none;
 }
 
 @keyframes onboarding-drift {
