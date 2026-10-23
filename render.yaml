@@ -1,9 +1,9 @@
 services:
   - type: web
-    name: chinnu-healthai
+    name: chinnu-ai
     env: node
     buildCommand: npm install && npm run build
-    startCommand: npx serve dist -s -l 10000
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
