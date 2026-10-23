@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: chinnu-healthai
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npx serve dist -s -l 10000
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NVIDIA_OCR_KEY
+        value: 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
+      - key: NVIDIA_API_KEY_1
+        value: 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
+      - key: NVIDIA_API_KEY_2
+        value: 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
+      - key: DATABASE_URL
+        sync: false

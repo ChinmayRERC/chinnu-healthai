@@ -1,0 +1,20 @@
+{
+  "name": "Chinnu HealthAI",
+  "short_name": "Chinnu",
+  "description": "A calmer health companion for food, movement, recovery, and realistic coaching.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f5f3ec",
+  "theme_color": "#1f2b20",
+  "categories": ["health", "fitness", "lifestyle"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

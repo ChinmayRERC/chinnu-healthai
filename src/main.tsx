@@ -1,19 +1,22 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
-import './styles.css'
-import posthog from 'posthog-js'
+import React from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import "./styles.css";
+import "./styles/v2-foundation.css";
+import "./styles/v2-pages.css";
+import "./styles/v2-flow.css";
+import "./styles/v2-overlays.css";
 
-if (typeof window !== 'undefined') {
-  posthog.init('phc_XXXXXXXXXX', {
-    api_host: 'https://us.i.posthog.com',
-    capture_pageview: true,
-    capture_pageleave: true
-  })
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      // Offline support is a bonus; the app works without it.
+    });
+  });
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
-)
+);

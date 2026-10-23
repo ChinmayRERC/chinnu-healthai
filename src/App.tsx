@@ -1,128 +1,381 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  Activity, Apple, ArrowLeft, ArrowRight, Bot, Camera, Check, ChevronRight,
-  CircleUserRound, Clock3, Droplets, Dumbbell, Flame, Footprints, HeartPulse,
-  Home, Mic, Moon, Pause, Play, Plus, Search, Send, Sparkles, Target,
-  Trash2, TrendingUp, Utensils, Video, Volume2, X,
-} from "lucide-react";
-import { insights, loadData, saveData } from "./data";
-import { exercises, guideFor, type Exercise } from "./exercises";
-import type { AppData, Gender, Meal, Section, TrainingSession, WorkoutItem } from "./types";
-import MuscleMap from "./MuscleMap";
-import ExerciseGuide from "./ExerciseGuide";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Check, HeartPulse, X } from "lucide-react";
+import { StoreProvider, useStore } from "./lib/store";
+import { generateRoutine } from "./lib/plan";
+import { getExercise, trackedExerciseFor } from "./lib/library";
+import type { Meal, Section, WorkoutItem } from "./types";
+import { BottomNav, Sidebar, Topbar } from "./components/Layout";
+import Onboarding from "./components/Onboarding";
+import FoodLogger from "./components/FoodLogger";
+import YouTubeModal from "./components/YouTubeModal";
+import WorkoutPlayer from "./components/WorkoutPlayer";
+import { ConfirmModal, ValueModal, WaterModal } from "./components/LogModals";
+import Today from "./pages/Today";
+import Explore from "./pages/Explore";
+import ExerciseDetail from "./pages/ExerciseDetail";
+import Workout from "./pages/Workout";
+import Coach from "./pages/Coach";
+import Progress from "./pages/Progress";
+import ProfilePage from "./pages/Profile";
+import Routine from "./pages/Routine";
 import Trainer from "./Trainer";
-import { askCoach, VoiceClient } from "./cloud";
 
-const navigation: { label: Section; icon: typeof Home }[] = [
-  { label: "Today", icon: Home }, { label: "Explore", icon: Search }, { label: "Workout", icon: Dumbbell },
-  { label: "Coach", icon: Bot }, { label: "Progress", icon: Activity },
-];
+type ModalMetric = "steps" | "sleep" | "weight" | null;
 
-function App() {
-  const [section, setSection] = useState<Section>("Today"), [data, setData] = useState<AppData>(loadData), [modal, setModal] = useState<"meal" | "water" | null>(null), [toast, setToast] = useState("");
-  const [exercise, setExercise] = useState<Exercise | null>(null), [trainer, setTrainer] = useState<Exercise | null>(null), [activeWorkout, setActiveWorkout] = useState(false);
-  const [genderModal, setGenderModal] = useState(() => loadData().profile.gender === null);
-  const gender: Gender = data.profile.gender || "male";
-  const update = (next: AppData) => { setData(next); saveData(next); };
-  const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(""), 2400); };
-  const openExercise = (selected: Exercise) => { setExercise(selected); setSection("Explore"); };
-  const saveSession = (session: TrainingSession) => { update({ ...data, trainingSessions: [session, ...data.trainingSessions] }); notify("Training session saved locally"); };
-
-  return <div className="app-shell">
-    <Sidebar section={section} gender={gender} onEditGender={() => setGenderModal(true)} onChange={value => { setSection(value); setExercise(null); }} />
-    <main className="main"><Header />
-      {section === "Today" && <Today data={data} onMeal={() => setModal("meal")} onWater={() => setModal("water")} onSection={setSection} onStart={() => setActiveWorkout(true)} />}
-      {section === "Explore" && (exercise ? <ExerciseDetail exercise={exercise} gender={gender} onBack={() => setExercise(null)} onTrain={() => setTrainer(exercise)} onAdd={() => { if (!data.workout.some(item => item.exerciseId === exercise.id)) update({ ...data, workout: [...data.workout, { exerciseId: exercise.id, sets: 3, target: exercise.phase ? 10 : exercise.seconds }] }); notify("Added to workout"); }} /> : <Explore gender={gender} onOpen={openExercise} />)}
-      {section === "Workout" && <Workout data={data} update={update} onOpen={openExercise} onTrain={setTrainer} onStart={() => setActiveWorkout(true)} notify={notify} />}
-      {section === "Coach" && <Coach data={data} onNavigate={setSection} />}
-      {section === "Progress" && <Progress data={data} />}
-    </main>
-    <BottomNav section={section} onChange={value => { setSection(value); setExercise(null); }} />
-    {modal === "meal" && <MealModal close={() => setModal(null)} add={meal => { update({ ...data, day: { ...data.day, meals: [...data.day.meals, meal] } }); setModal(null); notify("Meal added to today"); }} />}
-    {modal === "water" && <WaterModal current={data.day.water} close={() => setModal(null)} save={water => { update({ ...data, day: { ...data.day, water } }); setModal(null); notify("Hydration updated"); }} />}
-    {trainer && <div className="full-overlay"><Trainer exercise={trainer} gender={gender} onClose={() => setTrainer(null)} onSaved={saveSession}/></div>}
-    {activeWorkout && <WorkoutPlayer items={data.workout} onClose={() => setActiveWorkout(false)} onTrain={setTrainer} onFinish={log => { update({ ...data, workoutLogs: [log, ...data.workoutLogs] }); setActiveWorkout(false); notify("Workout completed"); }} />}
-    {genderModal && <GenderModal current={data.profile.gender} required={!data.profile.gender} onClose={() => setGenderModal(false)} onSelect={selected => { update({ ...data, profile: { gender: selected } }); setGenderModal(false); notify(`${selected === "male" ? "Male" : "Female"} profile selected`); }} />}
-    {toast && <div className="toast"><Check/>{toast}</div>}
-  </div>;
+export default function App() {
+  return (
+    <StoreProvider>
+      <Shell />
+    </StoreProvider>
+  );
 }
 
-function Sidebar({ section, gender, onChange, onEditGender }: { section: Section; gender: Gender; onChange: (value: Section) => void; onEditGender: () => void }) {
-  return <aside className="sidebar"><button className="brand" onClick={() => onChange("Today")}><span><HeartPulse/></span><b>CHINNU<small>HEALTH + MOVEMENT</small></b></button><nav>{navigation.map(({ label, icon: Icon }) => <button key={label} className={section === label ? "active" : ""} aria-current={section === label ? "page" : undefined} onClick={() => onChange(label)}><Icon/>{label}</button>)}</nav><div className="sidebar-card"><Sparkles/><b>Private AI trainer</b><p>Camera pose points stay on your device. Cloud voice is always optional.</p><button onClick={() => onChange("Explore")}>Explore movement <ArrowRight/></button></div><button className="profile" onClick={onEditGender}><span>{gender === "male" ? "M" : "F"}</span><div><b>Chinmaya</b><small>{gender === "male" ? "Male" : "Female"} profile · change</small></div><ChevronRight/></button></aside>;
+function Shell() {
+  const {
+    data,
+    targets,
+    cloudStatus,
+    updateProfile,
+    patchDay,
+    addMeal,
+    addWorkoutLog,
+    addTrainingSession,
+    setWorkout,
+  } = useStore();
+  const [section, setSection] = useState<Section>("Today");
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [detailOrigin, setDetailOrigin] = useState<Section>("Explore");
+  const [videoId, setVideoId] = useState<string | null>(null);
+  const [foodOpen, setFoodOpen] = useState(false);
+  const [foodMeal, setFoodMeal] = useState<Meal["type"] | undefined>(undefined);
+  const [waterOpen, setWaterOpen] = useState(false);
+  const [metric, setMetric] = useState<ModalMetric>(null);
+  const [playerItems, setPlayerItems] = useState<WorkoutItem[] | null>(null);
+  const [trainerId, setTrainerId] = useState<string | null>(null);
+  const [toast, setToast] = useState("");
+  const [exitConfirm, setExitConfirm] = useState(false);
+  const toastTimer = useRef<number | null>(null);
+
+  const activeSection = detailId ? detailOrigin : section;
+  const detailExercise = detailId ? getExercise(detailId) : undefined;
+  const videoExercise = videoId ? getExercise(videoId) : undefined;
+  const trainerExercise = trainerId ? trackedExerciseFor(trainerId) : undefined;
+  const metricWeightUnit = data.profile.units === "imperial" ? "lb" : "kg";
+
+  const notify = useCallback((message: string) => {
+    setToast(message);
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(""), 2800);
+  }, []);
+
+  useEffect(() => () => {
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+  }, []);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [section, detailId]);
+
+  useEffect(() => {
+    document.title = detailId ? "Exercise guide · Chinnu HealthAI" : `${section} · Chinnu HealthAI`;
+  }, [section, detailId]);
+
+  function go(next: Section) {
+    setDetailId(null);
+    setSection(next);
+  }
+
+  function openExercise(id: string) {
+    setDetailOrigin(section);
+    setDetailId(id);
+    setVideoId(null);
+  }
+
+  function openFood(type?: Meal["type"]) {
+    setFoodMeal(type);
+    setFoodOpen(true);
+  }
+
+  function handleGeneratePlan(focus: Parameters<typeof generateRoutine>[1]) {
+    const routine = generateRoutine(data.profile, focus);
+    if (!routine.length) {
+      notify("Add available equipment in your profile so we can build a plan.");
+      return;
+    }
+    setWorkout(routine);
+    notify(`${routine.length}-exercise plan ready`);
+    go("Workout");
+  }
+
+  function startWorkout() {
+    let items = data.workout;
+    if (!items.length) {
+      items = generateRoutine(data.profile, "full");
+      if (!items.length) {
+        notify("Add available equipment in your profile, then build a plan.");
+        return;
+      }
+      setWorkout(items);
+    }
+    setPlayerItems(items);
+  }
+
+  function startRoutineDay(dayIndex: number) {
+    const items = data.workout.length ? data.workout : data.personalRoutine?.days[dayIndex]?.items || [];
+    if (!items.length) {
+      notify("No exercises for this day");
+      return;
+    }
+    setPlayerItems(items);
+  }
+
+  function handleTrain(id: string) {
+    const tracked = trackedExerciseFor(id);
+    if (!tracked) {
+      notify("Camera coaching is available for the 15 foundational movements.");
+      return;
+    }
+    setTrainerId(id);
+  }
+
+  function finishWorkout(log: Parameters<typeof addWorkoutLog>[0]) {
+    addWorkoutLog(log);
+    setPlayerItems(null);
+    setExitConfirm(false);
+    notify(log.completedExercises ? `Session saved · ${log.completedExercises}/${log.totalExercises} exercises` : "Session closed");
+  }
+
+  function completeOnboarding(patch: Partial<typeof data.profile>) {
+    updateProfile({ ...patch, onboarded: true });
+    if (patch.weightKg) patchDay({ weight: patch.weightKg });
+    notify("Your starting targets are ready");
+  }
+
+  const detailBackLabel =
+    detailOrigin === "Today"
+      ? "Back to today"
+      : detailOrigin === "Workout"
+        ? "Back to plan"
+        : detailOrigin === "Progress"
+          ? "Back to progress"
+          : detailOrigin === "Profile"
+            ? "Back to profile"
+            : "All exercises";
+
+  if (!data.profile.onboarded) {
+    return (
+      <>
+        <Onboarding
+          profile={data.profile}
+          onComplete={completeOnboarding}
+          onSkip={() => {
+            updateProfile({ onboarded: true });
+            notify("Setup skipped — you can add details in Profile");
+          }}
+        />
+        {toast && <div className="toast" role="status"><Check /> {toast}</div>}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <a className="skip-to-content" href="#main-content">Skip to content</a>
+      <div className="app-shell">
+        <Sidebar
+          section={activeSection}
+          onNavigate={go}
+          profile={data.profile}
+          cloudStatus={cloudStatus}
+          onProfile={() => go("Profile")}
+        />
+        <div className="app-main">
+          <Topbar
+            section={activeSection}
+            profile={data.profile}
+            cloudStatus={cloudStatus}
+            onProfile={() => go("Profile")}
+          />
+          <main id="main-content" className="main-content">
+            {detailId ? (
+              <ExerciseDetail
+                id={detailId}
+                onBack={() => { setDetailId(null); setSection(detailOrigin); }}
+                backLabel={detailBackLabel}
+                onOpenVideo={(id) => setVideoId(id)}
+                onStartTrainer={handleTrain}
+                onNotify={notify}
+                onOpenExercise={openExercise}
+              />
+            ) : section === "Today" ? (
+              <Today
+                onLogFood={openFood}
+                onLogWater={() => setWaterOpen(true)}
+                onLogSteps={() => setMetric("steps")}
+                onLogSleep={() => setMetric("sleep")}
+                onLogWeight={() => setMetric("weight")}
+                onOpenExercise={openExercise}
+                onStartWorkout={startWorkout}
+                onGeneratePlan={handleGeneratePlan}
+                onNavigate={go}
+              />
+            ) : section === "Explore" ? (
+              <Explore onOpenExercise={openExercise} onOpenVideo={(id) => setVideoId(id)} />
+            ) : section === "Routine" ? (
+              <Routine
+                onOpenExercise={openExercise}
+                onStartRoutineDay={startRoutineDay}
+                onNavigate={go}
+                onNotify={notify}
+              />
+            ) : section === "Workout" ? (
+              <Workout
+                onOpenExercise={openExercise}
+                onStartWorkout={startWorkout}
+                onTrain={handleTrain}
+                onNotify={notify}
+                onNavigateExplore={() => go("Explore")}
+              />
+            ) : section === "Coach" ? (
+              <Coach onNavigate={go} />
+            ) : section === "Progress" ? (
+              <Progress onLogWeight={() => setMetric("weight")} />
+            ) : (
+              <ProfilePage onNotify={notify} />
+            )}
+          </main>
+          <BottomNav section={activeSection} onNavigate={go} />
+        </div>
+      </div>
+
+      {foodOpen && (
+        <FoodLogger
+          onClose={() => setFoodOpen(false)}
+          initialMeal={foodMeal}
+          onAdd={(meal) => {
+            addMeal(meal);
+            notify(`${meal.name} added to ${meal.type.toLowerCase()}`);
+          }}
+        />
+      )}
+
+      {waterOpen && (
+        <WaterModal
+          current={data.day.water}
+          target={targets.water}
+          onClose={() => setWaterOpen(false)}
+          onSave={(water) => {
+            patchDay({ water });
+            notify(`Water set to ${water} glasses`);
+          }}
+        />
+      )}
+
+      {metric === "steps" && (
+        <ValueModal
+          title="Log today's steps"
+          eyebrow="DAILY MOVEMENT"
+          description="An approximate phone or watch total is enough. The trend matters more than one exact number."
+          icon="steps"
+          unit="steps"
+          initial={data.day.steps}
+          step={100}
+          min={0}
+          max={100000}
+          presets={[2000, 5000, 8000, 10000]}
+          onClose={() => setMetric(null)}
+          onSave={(value) => {
+            patchDay({ steps: Math.round(value) });
+            notify(`${Math.round(value).toLocaleString()} steps logged`);
+          }}
+        />
+      )}
+
+      {metric === "sleep" && (
+        <ValueModal
+          title="How did you sleep?"
+          eyebrow="RECOVERY"
+          description="Use last night's actual sleep, not the time you spent in bed. A rough estimate is fine."
+          icon="sleep"
+          unit="hours"
+          initial={data.day.sleep}
+          step={0.5}
+          min={0}
+          max={16}
+          presets={[6, 7, 7.5, 8]}
+          onClose={() => setMetric(null)}
+          onSave={(value) => {
+            patchDay({ sleep: Math.round(value * 10) / 10 });
+            notify(`${value} hours of sleep logged`);
+          }}
+        />
+      )}
+
+      {metric === "weight" && (
+        <ValueModal
+          title="Log your weight"
+          eyebrow="BODY TREND"
+          description="Use the same scale and time of day when you can. A single weigh-in is noise; the weekly trend is the signal."
+          icon="weight"
+          unit={metricWeightUnit}
+          initial={data.profile.units === "imperial" ? Math.round((data.day.weight || data.profile.weightKg || 0) * 2.20462) : data.day.weight || data.profile.weightKg || 0}
+          step={0.1}
+          min={data.profile.units === "imperial" ? 55 : 25}
+          max={data.profile.units === "imperial" ? 770 : 350}
+          onClose={() => setMetric(null)}
+          onSave={(value) => {
+            const kg = data.profile.units === "imperial" ? value / 2.20462 : value;
+            const rounded = Math.round(kg * 10) / 10;
+            patchDay({ weight: rounded });
+            updateProfile({ weightKg: rounded });
+            notify(`Weight set to ${data.profile.units === "imperial" ? `${Math.round(value)} lb` : `${rounded} kg`}`);
+          }}
+        />
+      )}
+
+      {videoId && videoExercise && (
+        <YouTubeModal exercise={videoExercise} onClose={() => setVideoId(null)} />
+      )}
+
+      {playerItems && (
+        <WorkoutPlayer
+          items={playerItems}
+          onClose={() => setExitConfirm(true)}
+          onTrain={handleTrain}
+          onFinish={finishWorkout}
+        />
+      )}
+
+      {trainerId && trainerExercise && (
+        <div className="trainer-overlay" role="dialog" aria-modal="true" aria-label={`${trainerExercise.name} camera coach`}>
+          <div className="trainer-overlay-bar">
+            <span><HeartPulse /> On-device camera coach</span>
+            <button className="soft-btn" onClick={() => setTrainerId(null)}><X /> Close</button>
+          </div>
+          <Trainer
+            exercise={trainerExercise}
+            gender={data.profile.gender || "male"}
+            onClose={() => setTrainerId(null)}
+            onSaved={(session) => {
+              addTrainingSession(session);
+              setTrainerId(null);
+              notify(`${session.name} session saved${session.score !== null ? ` · score ${session.score}` : ""}`);
+            }}
+          />
+        </div>
+      )}
+
+      {exitConfirm && (
+        <ConfirmModal
+          title="Leave this session?"
+          description="Nothing from this workout will be saved. Your plan stays exactly as it is."
+          confirmLabel="Leave without saving"
+          onClose={() => setExitConfirm(false)}
+          onConfirm={() => { setPlayerItems(null); setExitConfirm(false); notify("Workout ended without saving"); }}
+        />
+      )}
+
+      {toast && <div className="toast" role="status"><Check /> {toast}</div>}
+    </>
+  );
 }
-
-function Header() {
-  return <header className="topbar"><div><small>{new Intl.DateTimeFormat("en", { weekday: "long", day: "numeric", month: "long" }).format(new Date()).toUpperCase()}</small><h1>Build a healthier day.</h1><p>Nutrition, movement, recovery, and coaching in one private workspace.</p></div><button className="avatar" aria-label="Profile"><CircleUserRound/></button></header>;
-}
-
-function Today({ data, onMeal, onWater, onSection, onStart }: { data: AppData; onMeal: () => void; onWater: () => void; onSection: (value: Section) => void; onStart: () => void }) {
-  const calories = data.day.meals.reduce((sum, meal) => sum + meal.calories, 0), protein = data.day.meals.reduce((sum, meal) => sum + meal.protein, 0), latest = data.trainingSessions[0];
-  return <div className="dashboard"><section className="dashboard-main"><article className="hero-card"><div><span className="eyebrow"><Sparkles/>TODAY'S FOCUS</span><h2>Fuel. Move. Recover.</h2><p>A balanced dinner and your {data.workout.length}-movement routine will close today with intent.</p><div className="hero-actions"><button className="primary-btn" onClick={onStart}><Play/>Start workout</button><button className="soft-btn" onClick={() => onSection("Explore")}>Find exercises</button></div></div><div className="daily-score"><div className="ring" style={{ "--progress": `${Math.min(100, Math.round(calories / 19))}%` } as React.CSSProperties}><strong>{calories}</strong><small>of 1,900 kcal</small></div><span><b>{protein} g</b> protein logged</span></div></article>
-    <div className="section-heading"><div><span className="eyebrow">DAILY SIGNALS</span><h2>Your body, at a glance</h2></div><button className="text-btn" onClick={() => onSection("Progress")}>View trends <ArrowRight/></button></div><div className="metric-grid"><Metric icon={Footprints} label="Steps" value={data.day.steps.toLocaleString()} detail="of 8,000" progress={data.day.steps / 80}/><Metric icon={Moon} label="Sleep" value={`${data.day.sleep} hr`} detail="Recovery looks steady" progress={data.day.sleep / 0.08}/><Metric icon={Droplets} label="Water" value={`${data.day.water} glasses`} detail="of 8" progress={data.day.water * 12.5}/><Metric icon={Dumbbell} label="Training" value={latest ? latest.name : "Not yet"} detail={latest ? `${latest.score ?? "--"} quality score` : "Your routine is ready"} progress={latest?.score || 0}/></div>
-    <div className="section-heading"><div><span className="eyebrow">FOOD DIARY</span><h2>Today's meals</h2></div><button className="text-btn" onClick={onMeal}><Plus/>Add food</button></div><div className="meal-list">{["Breakfast","Lunch","Dinner","Snack"].map(type => { const meals = data.day.meals.filter(meal => meal.type === type); return <button className="meal-row" key={type} onClick={onMeal}><span><Utensils/></span><div><b>{type}</b><small>{meals.map(meal => meal.name).join(", ") || "Nothing logged"}</small></div><strong>{meals.reduce((sum, meal) => sum + meal.calories, 0) || "--"}<small>kcal</small></strong><ChevronRight/></button>; })}</div></section>
-    <aside className="dashboard-rail"><article className="coach-callout"><span><Bot/></span><small>CHINNU AI</small><h3>Your next best step</h3><p>{insights[0]}</p><button onClick={() => onSection("Coach")}>Ask the coach <ArrowRight/></button></article><article className="water-card"><div><Droplets/><span><b>Hydration</b><small>{data.day.water} of 8 glasses</small></span></div><div>{Array.from({ length: 8 }, (_, i) => <i className={i < data.day.water ? "filled" : ""} key={i}/>)}</div><button onClick={onWater}><Plus/>Log water</button></article><article className="routine-card"><small>TODAY'S ROUTINE</small><h3>{data.workout.length} movements</h3>{data.workout.slice(0, 3).map(item => <span key={item.exerciseId}><b>{exercises.find(e => e.id === item.exerciseId)?.name}</b>{item.sets} x {item.target}</span>)}<button className="primary-btn" onClick={onStart}><Play/>Start now</button></article></aside></div>;
-}
-
-function Metric({ icon: Icon, label, value, detail, progress }: { icon: typeof Home; label: string; value: string; detail: string; progress: number }) { return <article className="metric-card"><span><Icon/></span><small>{label}</small><h3>{value}</h3><p>{detail}</p><div><i style={{ width: `${Math.min(100, progress)}%` }}/></div></article>; }
-
-function Explore({ gender, onOpen }: { gender: Gender; onOpen: (exercise: Exercise) => void }) {
-  const [muscle, setMuscle] = useState(""), [category, setCategory] = useState("All"), [query, setQuery] = useState("");
-  const shown = exercises.filter(exercise => (!muscle || exercise.muscles.includes(muscle)) && (category === "All" || exercise.category === category) && (!query || `${exercise.name} ${exercise.muscles.join(" ")}`.toLowerCase().includes(query.toLowerCase())));
-  return <section className="page"><div className="page-title"><span className="eyebrow">MOVE WITH PURPOSE</span><h2>Explore 15 guided movements.</h2><p>Filter by body area, goal, or movement style. Every practice includes setup and safety guidance.</p></div><MuscleMap selected={muscle} onSelect={setMuscle} gender={gender}/><div className="library-tools"><label><Search/><input aria-label="Search exercises or muscles" placeholder="Search exercises or muscles" value={query} onChange={event => setQuery(event.target.value)}/></label><div className="segmented">{["All","Gym","Yoga","Breathing"].map(value => <button className={category === value ? "active" : ""} aria-pressed={category === value} onClick={() => setCategory(value)} key={value}>{value}</button>)}</div></div><div className="exercise-grid">{shown.map((exercise, index) => <button className="exercise-card" onClick={() => onOpen(exercise)} key={exercise.id}><div className={`exercise-art art-${index % 4}`}><MovementGlyph exercise={exercise} gender={gender}/><span>{exercise.view} view</span></div><div><small>{exercise.category}</small><h3>{exercise.name}</h3><p>{exercise.muscles.slice(0, 3).join(" · ")}</p><span className="card-link">View guide <ArrowRight/></span></div></button>)}</div>{!shown.length && <div className="empty-state"><Search/><h3>No matching movement</h3><p>Clear a filter or try another body area.</p></div>}</section>;
-}
-
-function MovementGlyph({ exercise, gender }: { exercise: Exercise; gender: Gender }) { return <div className={`movement-glyph ${gender}`} role="img" aria-label={`${gender} figure demonstrating ${exercise.name}`}><i/><b/><span className={exercise.phase ? "bent" : ""}/>{gender === "female" && <em/>}</div>; }
-
-function ExerciseDetail({ exercise, gender, onBack, onTrain, onAdd }: { exercise: Exercise; gender: Gender; onBack: () => void; onTrain: () => void; onAdd: () => void }) {
-  return <section className="page detail-page"><button className="back-btn" onClick={onBack}><ArrowLeft/>All exercises</button><div className="detail-hero"><div><span className="eyebrow">{exercise.category.toUpperCase()} · {exercise.view.toUpperCase()} VIEW</span><h2>{exercise.name}</h2><p>{exercise.muscles.join(" · ")}</p><div><button className="primary-btn" onClick={onTrain}><Camera/>Start AI trainer</button><button className="soft-btn" onClick={onAdd}><Plus/>Add to workout</button></div></div><MovementGlyph exercise={exercise} gender={gender}/></div><div className="detail-facts"><article><Clock3/><b>{exercise.seconds} sec</b><span>suggested round</span></article><article><Target/><b>{exercise.phase ? "Rep tracking" : "Timed hold"}</b><span>local pose measurement</span></article><article><Video/><b>{exercise.view} view</b><span>recommended camera angle</span></article></div><ExerciseGuide exercise={exercise} gender={gender}/><div className="clinical-note"><HeartPulse/><div><b>Practice, not diagnosis</b><p>Camera guidance estimates visible joint angles. It cannot assess pain, load, injury, or whether a movement is medically appropriate for you.</p></div></div></section>;
-}
-
-function Workout({ data, update, onOpen, onTrain, onStart, notify }: { data: AppData; update: (data: AppData) => void; onOpen: (exercise: Exercise) => void; onTrain: (exercise: Exercise) => void; onStart: () => void; notify: (text: string) => void }) {
-  const [adding, setAdding] = useState(false);
-  const change = (index: number, patch: Partial<WorkoutItem>) => update({ ...data, workout: data.workout.map((item, i) => i === index ? { ...item, ...patch } : item) });
-  return <section className="page"><div className="page-title split"><div><span className="eyebrow">WORKOUT BUILDER</span><h2>Your adaptable routine.</h2><p>Adjust sets and targets, then train with manual or camera-assisted tracking.</p></div><button className="primary-btn" disabled={!data.workout.length} onClick={onStart}><Play/>Start workout</button></div><div className="workout-layout"><div className="workout-list">{data.workout.map((item, index) => { const exercise = exercises.find(value => value.id === item.exerciseId)!; return <article className="workout-row" key={item.exerciseId}><span className="workout-index">{String(index + 1).padStart(2, "0")}</span><button className="workout-name" onClick={() => onOpen(exercise)}><small>{exercise.category} · {exercise.view}</small><b>{exercise.name}</b><span>{exercise.muscles.join(" · ")}</span></button><label>SETS<input type="number" min="1" max="8" value={item.sets} onChange={event => change(index, { sets: Number(event.target.value) })}/></label><label>{exercise.phase ? "REPS" : "SECONDS"}<input type="number" min="1" max="300" value={item.target} onChange={event => change(index, { target: Number(event.target.value) })}/></label><button className="camera-btn" onClick={() => onTrain(exercise)} title="Open camera trainer"><Camera/></button><button className="delete-btn" onClick={() => update({ ...data, workout: data.workout.filter((_, i) => i !== index) })}><Trash2/></button></article>; })}{!data.workout.length && <div className="empty-state"><Dumbbell/><h3>Your workout is empty</h3><p>Add a movement to build a routine.</p></div>}<button className="add-row" onClick={() => setAdding(!adding)}><Plus/>Add movement</button>{adding && <div className="quick-add">{exercises.filter(exercise => !data.workout.some(item => item.exerciseId === exercise.id)).map(exercise => <button key={exercise.id} onClick={() => { update({ ...data, workout: [...data.workout, { exerciseId: exercise.id, sets: 3, target: exercise.phase ? 10 : exercise.seconds }] }); setAdding(false); notify(`${exercise.name} added`); }}><Plus/><span><b>{exercise.name}</b><small>{exercise.category} · {exercise.muscles.slice(0, 2).join(", ")}</small></span></button>)}</div>}</div><aside className="workout-summary"><span className="eyebrow">SESSION PREVIEW</span><h3>{data.workout.reduce((sum, item) => sum + item.sets, 0)} total sets</h3><p>About {Math.max(5, data.workout.length * 6)} minutes including rest.</p><div><span><Flame/>Estimated effort</span><b>{data.workout.length * 35} kcal</b></div><div><Clock3/>Rest timer<b>60 sec</b></div><button className="primary-btn" disabled={!data.workout.length} onClick={onStart}><Play/>Begin session</button><small>Use manual completion or open the private camera trainer from any movement.</small></aside></div></section>;
-}
-
-function WorkoutPlayer({ items, onClose, onTrain, onFinish }: { items: WorkoutItem[]; onClose: () => void; onTrain: (exercise: Exercise) => void; onFinish: (log: AppData["workoutLogs"][number]) => void }) {
-  const [index, setIndex] = useState(0), [set, setSet] = useState(1), [rest, setRest] = useState(0), [paused, setPaused] = useState(false); const start = useRef(Date.now()), current = exercises.find(exercise => exercise.id === items[index]?.exerciseId);
-  useEffect(() => { if (!rest || paused) return; const timer = window.setInterval(() => setRest(value => Math.max(0, value - 1)), 1000); return () => clearInterval(timer); }, [rest, paused]);
-  if (!current) return <div className="modal-backdrop"><div className="modal"><h2>No movements yet</h2><button className="primary-btn" onClick={onClose}>Close</button></div></div>;
-  const item = items[index], completeSet = () => { if (set < item.sets) { setSet(set + 1); setRest(60); } else if (index < items.length - 1) { setIndex(index + 1); setSet(1); setRest(60); } else onFinish({ id: Date.now(), date: new Date().toISOString(), title: "Custom routine", duration: Math.round((Date.now() - start.current) / 1000), completedExercises: items.length, totalExercises: items.length }); };
-  return <div className="full-overlay workout-player"><button className="player-close" onClick={onClose}><X/></button><div className="player-progress"><i style={{ width: `${((index + (set - 1) / item.sets) / items.length) * 100}%` }}/></div><div className="player-content"><small>EXERCISE {index + 1} OF {items.length}</small><h2>{current.name}</h2><p>{current.muscles.join(" · ")}</p>{rest > 0 ? <div className="rest-clock"><span>REST</span><strong>{rest}</strong><small>seconds</small><button className="soft-btn" onClick={() => setPaused(!paused)}>{paused ? <Play/> : <Pause/>}{paused ? "Resume" : "Pause"}</button><button className="text-btn" onClick={() => setRest(0)}>Skip rest</button></div> : <><div className="set-target"><span><small>SET</small><strong>{set}<i>/{item.sets}</i></strong></span><span><small>{current.phase ? "TARGET REPS" : "HOLD"}</small><strong>{item.target}<i>{current.phase ? "" : "s"}</i></strong></span></div><button className="trainer-launch" onClick={() => onTrain(current)}><Camera/><span><b>Use AI camera trainer</b><small>On-device reps, hold, and form cues</small></span><ArrowRight/></button><button className="complete-set" onClick={completeSet}><Check/>Complete set</button></>}<button className="guide-link" onClick={() => speakText(`${current.name}. ${guideFor(current).steps.join(" ")}`)}><Volume2/>Read movement cues</button></div></div>;
-}
-const speakText = (text: string) => { if (!("speechSynthesis" in window)) return; speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(text)); };
-
-function Coach({ data, onNavigate }: { data: AppData; onNavigate: (section: Section) => void }) {
-  const [messages, setMessages] = useState([{ from: "ai", text: "I can help connect your food, movement, and recovery. What would you like to work on?" }]), [input, setInput] = useState(""), [busy, setBusy] = useState(false), [voice, setVoice] = useState("Offline"), [consent, setConsent] = useState(false), [showConsent, setShowConsent] = useState(false);
-  const client = useRef<VoiceClient | null>(null);
-  useEffect(() => () => client.current?.disconnect(), []);
-  const submit = async (preset?: string) => { const text = (preset || input).trim(); if (!text || busy) return; setInput(""); setMessages(current => [...current, { from: "me", text }]); setBusy(true); try { const answer = await askCoach(text, { page: "Coach", availableExercises: exercises.map(({ id, name }) => ({ id, name })), conservativeMode: true, health: { water: data.day.water, steps: data.day.steps, sleep: data.day.sleep, meals: data.day.meals.length }, workout: data.workout }); setMessages(current => [...current, { from: "ai", text: answer }]); } catch { setMessages(current => [...current, { from: "ai", text: "The cloud coach is unavailable right now. Your local tracking and camera trainer still work. Try a short walk, hydrate, or choose a comfortable movement from Explore." }]); } finally { setBusy(false); } };
-  const connectVoice = async () => { if (!consent) return; try { const next = new VoiceClient(setVoice, text => setMessages(current => [...current, { from: "ai", text }])); client.current = next; await next.connect(); setShowConsent(false); } catch (error) { setVoice("Offline"); setMessages(current => [...current, { from: "ai", text: error instanceof Error ? error.message : "Voice is unavailable." }]); } };
-  return <section className="coach-page"><aside className="coach-context"><span><Sparkles/></span><small>YOUR CONTEXT</small><h2>A coach that sees the whole day.</h2><p>Chinnu sends the compact facts shown here, never your camera frames.</p><div><span>Water<b>{data.day.water}/8</b></span><span>Steps<b>{data.day.steps.toLocaleString()}</b></span><span>Sleep<b>{data.day.sleep}h</b></span><span>Routine<b>{data.workout.length} moves</b></span></div><button className="soft-btn" onClick={() => onNavigate("Explore")}><Dumbbell/>Browse movements</button></aside><div className="chat-panel"><div className="chat-head"><span><Bot/></span><div><h2>Chinnu AI Coach</h2><p><i className={voice === "Listening" ? "online" : ""}/>{voice === "Listening" ? "Voice connected" : "Text coach ready"}</p></div><button className="voice-button" onClick={() => voice === "Listening" ? (client.current?.disconnect(), setVoice("Offline")) : setShowConsent(true)}><Mic/>{voice === "Listening" ? "Disconnect" : "Talk"}</button></div><div className="prompt-row">{["Plan a 15-minute workout", "Review my day", "Suggest a protein-rich dinner"].map(value => <button onClick={() => submit(value)} key={value}>{value}</button>)}</div><div className="chat-messages">{messages.map((message, index) => <div className={`message ${message.from}`} key={index}>{message.text}</div>)}{busy && <div className="message ai typing"><i/><i/><i/></div>}</div><div className="composer"><input value={input} onChange={event => setInput(event.target.value)} onKeyDown={event => event.key === "Enter" && submit()} placeholder="Ask about meals, workouts, sleep, or habits"/><button onClick={() => submit()} disabled={busy}><Send/></button></div><small className="disclaimer">Everyday wellness support only. Not medical advice or emergency care.</small></div>{showConsent && <div className="voice-consent"><button onClick={() => setShowConsent(false)}><X/></button><Mic/><h3>Enable NVIDIA voice?</h3><p>Microphone audio is sent through the Chinnu Render service to NVIDIA speech and AI. Camera frames and your local history are not sent. Provider terms apply.</p><label><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)}/>I consent to cloud audio processing for this session.</label><button className="primary-btn" disabled={!consent || voice === "Connecting"} onClick={connectVoice}>{voice === "Connecting" ? "Connecting..." : "Enable microphone"}</button></div>}</section>;
-}
-
-function Progress({ data }: { data: AppData }) {
-  const sessions = data.trainingSessions, average = sessions.filter(item => item.score !== null).length ? Math.round(sessions.reduce((sum, item) => sum + (item.score || 0), 0) / sessions.filter(item => item.score !== null).length) : 0, reps = sessions.reduce((sum, item) => sum + item.reps.length, 0);
-  const bars = [42, 64, 38, 78, 58, 88, Math.max(24, Math.min(100, sessions.length * 18))];
-  return <section className="page"><div className="page-title"><span className="eyebrow">MEASURE THE DIRECTION</span><h2>Consistency over perfection.</h2><p>Your local movement sessions, workouts, nutrition, and recovery signals.</p></div><div className="progress-stats"><article><span><Dumbbell/></span><small>TRAINING SESSIONS</small><b>{sessions.length}</b><p>{reps} measured repetitions</p></article><article><span><Target/></span><small>AVG. QUALITY</small><b>{average || "--"}</b><p>Visible pose estimate</p></article><article><span><Flame/></span><small>WORKOUTS</small><b>{data.workoutLogs.length}</b><p>{data.workoutLogs.reduce((sum, log) => sum + log.duration, 0) / 60 | 0} active minutes</p></article><article><span><TrendingUp/></span><small>WEIGHT</small><b>{data.day.weight} kg</b><p>Current local entry</p></article></div><div className="progress-grid"><article className="trend-card"><div><span className="eyebrow">WEEKLY RHYTHM</span><h3>Activity across the week</h3></div><div className="bar-chart">{bars.map((height, index) => <span key={index}><i style={{ height: `${height}%` }}/><small>{"MTWTFSS"[index]}</small></span>)}</div></article><article className="recovery-card"><span className="eyebrow">RECOVERY</span><h3>{data.day.sleep >= 7 ? "Ready for a normal session" : "Keep today lighter"}</h3><div className="recovery-ring"><b>{Math.round(data.day.sleep / 8 * 100)}</b><small>sleep score</small></div><p>{data.day.sleep} hours logged. Use comfort and energy, not a score alone, to choose intensity.</p></article></div><div className="section-heading"><div><span className="eyebrow">RECENT TRAINING</span><h2>Session history</h2></div></div><div className="history-list">{sessions.map(session => <article key={session.id}><span><Dumbbell/></span><div><b>{session.name}</b><small>{new Date(session.date).toLocaleString()}</small></div><strong>{session.reps.length ? `${session.reps.length} reps` : `${session.hold}s hold`}</strong><em>{session.score ?? "--"}<small>quality</small></em></article>)}{!sessions.length && <div className="empty-state"><Activity/><h3>No measured sessions yet</h3><p>Open an exercise and use the local camera or video trainer.</p></div>}</div></section>;
-}
-
-function GenderFigure({ gender }: { gender: Gender }) {
-  const female = gender === "female";
-  return <svg className="gender-figure" viewBox="0 0 150 260" role="img" aria-label={`${female ? "Female" : "Male"} body illustration`}><circle cx="75" cy="27" r={female ? 17 : 18}/>{female ? <><path d="M59 54 Q75 46 91 54 Q95 73 101 100 Q111 128 96 152 L102 244 L82 244 L75 168 L68 244 L48 244 L54 152 Q39 128 49 100 Q55 73 59 54Z"/><path d="M55 61 L25 130 L40 138 L64 82 M95 61 L125 130 L110 138 L86 82"/><path d="M60 13 Q48 31 57 48" fill="none" strokeWidth="7" strokeLinecap="round"/></> : <><path d="M49 54 Q75 41 101 54 L111 132 Q101 151 94 166 L102 244 L82 244 L75 174 L68 244 L48 244 L56 166 Q49 151 39 132Z"/><path d="M47 60 L18 130 L34 139 L61 82 M103 60 L132 130 L116 139 L89 82"/></>}</svg>;
-}
-
-function GenderModal({ current, required, onClose, onSelect }: { current: Gender | null; required: boolean; onClose: () => void; onSelect: (gender: Gender) => void }) {
-  return <div className="modal-backdrop gender-backdrop"><div className="gender-modal">{!required && <button className="modal-close" onClick={onClose} aria-label="Close gender selector"><X/></button>}<span className="eyebrow">PERSONALIZE CHINNU HEALTH</span><h2>Select your profile</h2><p>This changes the body map and exercise illustrations. Exercise access, pose tracking, and health guidance stay the same.</p><div className="gender-options"><button className={current === "male" ? "selected" : ""} onClick={() => onSelect("male")}><div><GenderFigure gender="male"/></div><span><b>Male</b><small>Use male body illustrations</small></span>{current === "male" && <Check/>}</button><button className={current === "female" ? "selected" : ""} onClick={() => onSelect("female")}><div><GenderFigure gender="female"/></div><span><b>Female</b><small>Use female body illustrations</small></span>{current === "female" && <Check/>}</button></div><small className="gender-privacy">Stored only in this app on your device. You can change it anytime from your profile.</small></div></div>;
-}
-
-function MealModal({ close, add }: { close: () => void; add: (meal: Meal) => void }) {
-  const [name, setName] = useState(""), [type, setType] = useState<Meal["type"]>("Dinner"), [calories, setCalories] = useState("420"), [protein, setProtein] = useState("18");
-  return <div className="modal-backdrop" onMouseDown={event => event.target === event.currentTarget && close()}><form className="modal" onSubmit={event => { event.preventDefault(); if (name) add({ id: Date.now(), type, name, calories: Number(calories), protein: Number(protein) }); }}><button type="button" className="modal-close" onClick={close}><X/></button><span className="modal-mark"><Apple/></span><span className="eyebrow">NUTRITION</span><h2>Log a meal</h2><p>Add a practical estimate now. You can adjust it later.</p><label>Meal<input value={name} onChange={event => setName(event.target.value)} placeholder="e.g. Paneer tikka bowl" autoFocus/></label><div className="form-row"><label>Type<select value={type} onChange={event => setType(event.target.value as Meal["type"])}><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select></label><label>Calories<input type="number" min="0" value={calories} onChange={event => setCalories(event.target.value)}/></label><label>Protein (g)<input type="number" min="0" value={protein} onChange={event => setProtein(event.target.value)}/></label></div><button className="primary-btn" type="submit">Add to today</button></form></div>;
-}
-
-function WaterModal({ current, close, save }: { current: number; close: () => void; save: (water: number) => void }) { const [water, setWater] = useState(current); return <div className="modal-backdrop"><div className="modal water-modal"><button className="modal-close" onClick={close}><X/></button><span className="modal-mark blue"><Droplets/></span><span className="eyebrow">HYDRATION</span><h2>How many glasses?</h2><div className="water-picker"><button onClick={() => setWater(Math.max(0, water - 1))}>-</button><b>{water}<small>glasses</small></b><button onClick={() => setWater(Math.min(20, water + 1))}>+</button></div><button className="primary-btn" onClick={() => save(water)}>Save hydration</button></div></div>; }
-
-function BottomNav({ section, onChange }: { section: Section; onChange: (value: Section) => void }) { return <nav className="bottom-nav">{navigation.map(({ label, icon: Icon }) => <button className={section === label ? "active" : ""} aria-current={section === label ? "page" : undefined} onClick={() => onChange(label)} key={label}><Icon/><small>{label}</small></button>)}</nav>; }
-
-export default App;
