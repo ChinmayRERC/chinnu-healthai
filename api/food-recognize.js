@@ -1,9 +1,10 @@
 export const config = { runtime: 'nodejs' };
 
 const NVIDIA_KEYS = [
-  process.env.NVIDIA_OCR_KEY || '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',
-  process.env.NVIDIA_API_KEY_1 || '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',
-  process.env.NVIDIA_API_KEY_2 || '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',
+  process.env.NVIDIA_API_KEY || process.env.NVIDIA_OCR_KEY,
+  process.env.NVIDIA_API_KEY_1,
+  process.env.NVIDIA_API_KEY_2,
+].filter(Boolean);
 ];
 
 const PROMPT = `You are an expert food recognition and nutrition estimator for Indian and global foods.

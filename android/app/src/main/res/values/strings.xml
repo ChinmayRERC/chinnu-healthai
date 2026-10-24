@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Chinnu HealthAI</string>
+    <string name="title_activity_main">Chinnu HealthAI</string>
+    <string name="package_name">com.chinnu.healthai</string>
+    <string name="custom_url_scheme">com.chinnu.healthai</string>
+</resources>

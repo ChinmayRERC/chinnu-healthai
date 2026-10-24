@@ -1,8 +1,11 @@
-const NVIDIA_KEYS = [
-  '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',
-  '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',
-  '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',
-];
+const getNvidiaKeys = () => {
+  const keys = [
+    (import.meta.env.VITE_NVIDIA_API_KEY as string | undefined)?.trim(),
+    (import.meta.env.VITE_NVIDIA_API_KEY_1 as string | undefined)?.trim(),
+    (import.meta.env.VITE_NVIDIA_API_KEY_2 as string | undefined)?.trim(),
+  ].filter((k): k is string => Boolean(k && k.length > 0));
+  return keys;
+};
 
 export type CoachMode = 'gym' | 'yoga' | 'pranayama' | 'fitness' | 'general';
 
@@ -73,7 +76,7 @@ export class AICameraCoach {
       } catch {}
       
       // Direct to NVIDIA as fallback
-      for (const key of NVIDIA_KEYS) {
+      for (const key of getNvidiaKeys()) {
         try {
           const resp = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
             method: 'POST',

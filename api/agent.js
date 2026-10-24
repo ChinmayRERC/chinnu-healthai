@@ -14,10 +14,10 @@ export default async function handler(req, res) {
     if (!message) return res.status(400).json({ error: 'Message required' });
 
     const keys = [
-      process.env.NVIDIA_OCR_KEY || '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',
-      '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',
-      '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',
-    ];
+      process.env.NVIDIA_API_KEY || process.env.NVIDIA_OCR_KEY || process.env.NVIDIA_API_KEY_1,
+      process.env.NVIDIA_API_KEY_2,
+      process.env.NVIDIA_API_KEY_3,
+    ].filter(Boolean);
     const messages = [
       { role: 'system', content: SYSTEM + '\n\nContext:\n' + JSON.stringify(context || {}) },
       ...history.slice(-10).map(h => ({ role: h.from === 'me' ? 'user' : 'assistant', content: h.text })),

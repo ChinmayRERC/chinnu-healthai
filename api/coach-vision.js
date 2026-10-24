@@ -1,9 +1,10 @@
 export const config = { runtime: 'nodejs' };
 
 const KEYS = [
-  process.env.NVIDIA_OCR_KEY || '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',
-  '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',
-  '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',
+  process.env.NVIDIA_API_KEY || process.env.NVIDIA_OCR_KEY,
+  process.env.NVIDIA_API_KEY_1,
+  process.env.NVIDIA_API_KEY_2,
+].filter(Boolean);
 ];
 
 const SYSTEM = `You are a friendly, motivating AI fitness coach doing REAL-TIME coaching via camera.
