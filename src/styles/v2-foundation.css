@@ -171,8 +171,8 @@ h1 {
   margin-bottom: 18px;
   font-size: clamp(42px, 5.4vw, 68px);
   font-weight: 800;
-  line-height: 0.98;
-  letter-spacing: -0.05em;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
 }
 
 h1 em {
@@ -759,7 +759,7 @@ select {
   font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.09em;
-  line-height: 1.1;
+  line-height: 1.25;
 }
 
 .brand-lockup small {
@@ -1277,6 +1277,31 @@ select {
   opacity: 1;
 }
 
+/* Loop two-frame demonstrations like lightweight GIFs. */
+.exercise-media.gif-loop img + img {
+  animation: exercise-demo-loop 2.2s ease-in-out infinite;
+}
+
+@keyframes exercise-demo-loop {
+  0%,
+  38% {
+    opacity: 0;
+  }
+  50%,
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exercise-media.gif-loop img + img {
+    animation: none;
+  }
+}
+
 .exercise-media.card {
   aspect-ratio: 4 / 3.15;
 }
@@ -1708,7 +1733,7 @@ select {
 
 @media (max-width: 560px) {
   h1 {
-    font-size: clamp(38px, 12vw, 52px);
+    font-size: clamp(32px, 9.5vw, 44px);
   }
 
   h2 {

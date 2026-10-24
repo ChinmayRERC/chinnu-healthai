@@ -13,6 +13,7 @@ import {
 import AnatomyFigure from "../AnatomyFigure";
 import ExerciseMedia from "../components/ExerciseMedia";
 import { useStore } from "../lib/store";
+import type { Gender } from "../types";
 import {
   filterLibrary,
   FLAGSHIP_IDS,
@@ -49,10 +50,9 @@ export default function Explore({
   const [query, setQuery] = useState("");
   const [equipment, setEquipment] = useState("");
   const [level, setLevel] = useState("");
-  const [view, setView] = useState<"Front" | "Back">("Front");
+  const [bodyGender, setBodyGender] = useState<Gender>(data.profile.gender || "male");
   const [visible, setVisible] = useState(PAGE_SIZE);
   const resultsRef = useRef<HTMLDivElement>(null);
-  const gender = data.profile.gender || "male";
 
   const filtered = useMemo(() => filterLibrary({ muscle, query, equipment, level }), [muscle, query, equipment, level]);
   const ordered = useMemo(() => {
@@ -105,11 +105,20 @@ export default function Explore({
           </div>
         </div>
         <div className="explore-body-card">
-          <div className="body-toggle">
-            <button className={view === "Front" ? "active" : ""} onClick={() => setView("Front")}>Front</button>
-            <button className={view === "Back" ? "active" : ""} onClick={() => setView("Back")}>Back</button>
+          <div className="body-toggle" role="group" aria-label="Choose anatomy figure">
+            <button className={bodyGender === "male" ? "active" : ""} aria-pressed={bodyGender === "male"} onClick={() => setBodyGender("male")}>Male</button>
+            <button className={bodyGender === "female" ? "active" : ""} aria-pressed={bodyGender === "female"} onClick={() => setBodyGender("female")}>Female</button>
           </div>
-          <AnatomyFigure gender={gender} view={view} selected={muscle} onSelect={chooseRegion} />
+          <div className="anatomy-pair">
+            <div className="anatomy-view">
+              <span>Front</span>
+              <AnatomyFigure gender={bodyGender} view="Front" selected={muscle} onSelect={chooseRegion} />
+            </div>
+            <div className="anatomy-view">
+              <span>Back</span>
+              <AnatomyFigure gender={bodyGender} view="Back" selected={muscle} onSelect={chooseRegion} />
+            </div>
+          </div>
           <div className="body-card-footer">
             <small>{muscle ? `Showing ${regionLabel(muscle)}` : "Tap a muscle to filter"}</small>
             {muscle && <button onClick={() => setMuscle("")}>Clear <X /></button>}

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: chinnu-ai
+    name: chinnu-healthai-v3
     env: node
     buildCommand: npm install && npm run build
     startCommand: npm start

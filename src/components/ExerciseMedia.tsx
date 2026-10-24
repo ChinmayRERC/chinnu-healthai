@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Dumbbell, Play } from "lucide-react";
 import type { LibraryExercise } from "../lib/library";
 import videoManifest from "../data/videoManifest.json";
@@ -9,25 +9,17 @@ export default function ExerciseMedia({
   exercise,
   variant = "card",
   className = "",
-  autoAlternate = false,
 }: {
   exercise: LibraryExercise;
   variant?: MediaVariant;
   className?: string;
   autoAlternate?: boolean;
 }) {
-  const [alternate, setAlternate] = useState(false);
   const [broken, setBroken] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
   const videoSrc = (videoManifest as Record<string, string>)[exercise.id];
   const first = exercise.imageUrls[0];
   const second = exercise.imageUrls[1] || first;
-
-  useEffect(() => {
-    if (!autoAlternate || variant !== "hero" || videoSrc) return;
-    const timer = window.setInterval(() => setAlternate((value) => !value), 2800);
-    return () => window.clearInterval(timer);
-  }, [autoAlternate, variant, videoSrc]);
 
   if (!first || broken) {
     return (
@@ -59,13 +51,10 @@ export default function ExerciseMedia({
 
   return (
     <div
-      className={`exercise-media ${variant} ${className}`}
-      onMouseEnter={() => setAlternate(true)}
-      onMouseLeave={() => setAlternate(false)}
+      className={`exercise-media ${variant} ${second !== first ? "gif-loop" : ""} ${className}`}
     >
       <img src={first} alt={`${exercise.name} starting position`} loading="lazy" decoding="async" onError={() => setBroken(true)} />
       <img
-        className={alternate ? "visible" : ""}
         src={second}
         alt={`${exercise.name} end position`}
         loading="lazy"

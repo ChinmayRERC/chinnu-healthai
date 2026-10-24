@@ -1238,8 +1238,8 @@
   font-family: var(--font-display);
   font-size: clamp(30px, 3.7vw, 48px);
   font-weight: 800;
-  letter-spacing: -0.045em;
-  line-height: 0.98;
+  letter-spacing: -0.03em;
+  line-height: 1.18;
 }
 
 .player-media-caption > small {
@@ -1393,8 +1393,8 @@
   font-family: var(--font-display);
   font-size: clamp(96px, 12vw, 156px);
   font-weight: 800;
-  letter-spacing: -0.075em;
-  line-height: 0.9;
+  letter-spacing: -0.06em;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
   text-shadow: 0 20px 50px rgba(215, 241, 125, 0.14);
 }
