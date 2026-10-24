@@ -1,4 +1,4 @@
-export type Section = "Today" | "Explore" | "Workout" | "Coach" | "Progress" | "Profile" | "Routine";
+export type Section = "Today" | "Yoga" | "Explore" | "Workout" | "Coach" | "Progress" | "Profile" | "Routine";
 export type Gender = "male" | "female";
 
 export type Goal = "lose" | "recomp" | "gain" | "strength";

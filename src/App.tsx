@@ -11,6 +11,7 @@ import YouTubeModal from "./components/YouTubeModal";
 import WorkoutPlayer from "./components/WorkoutPlayer";
 import { ConfirmModal, ValueModal, WaterModal } from "./components/LogModals";
 import Today from "./pages/Today";
+import Yoga from "./pages/Yoga";
 import Explore from "./pages/Explore";
 import ExerciseDetail from "./pages/ExerciseDetail";
 import Workout from "./pages/Workout";
@@ -219,6 +220,8 @@ function Shell() {
                 onGeneratePlan={handleGeneratePlan}
                 onNavigate={go}
               />
+            ) : section === "Yoga" ? (
+              <Yoga onOpenExercise={openExercise} onOpenVideo={(id) => setVideoId(id)} onStartTrainer={handleTrain} />
             ) : section === "Explore" ? (
               <Explore onOpenExercise={openExercise} onOpenVideo={(id) => setVideoId(id)} />
             ) : section === "Routine" ? (

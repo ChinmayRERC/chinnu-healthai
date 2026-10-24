@@ -14,12 +14,14 @@ import {
   Sparkles,
   TriangleAlert,
   UserRound,
+  Flower2,
 } from "lucide-react";
 import type { Section, Profile } from "../types";
 import type { CloudStatus } from "../lib/store";
 
 export const NAV: { label: Section; icon: typeof Home }[] = [
   { label: "Today", icon: Home },
+  { label: "Yoga", icon: Flower2 },
   { label: "Routine", icon: CalendarRange },
   { label: "Explore", icon: Search },
   { label: "Workout", icon: Dumbbell },
