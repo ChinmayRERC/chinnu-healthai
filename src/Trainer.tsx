@@ -5,6 +5,8 @@ import { createEstimator, drawSkeleton, type PoseEstimator } from "./pose";
 import type { Gender, Rep, TrainingSession } from "./types";
 import ExerciseGuide from "./ExerciseGuide";
 import { aiCoach } from "./lib/aiCoach";
+import { extractFeatures } from "./ml/poseFeatures";
+import { poseClassifier } from "./ml/poseClassifier";
 
 const speak = (text: string) => { if (!("speechSynthesis" in window)) return; speechSynthesis.cancel(); const voice = new SpeechSynthesisUtterance(text); voice.rate = 0.95; speechSynthesis.speak(voice); };
 
@@ -21,15 +23,17 @@ export default function Trainer({ exercise, gender, onClose, onSaved }: { exerci
   const engine = useRef(new MovementEngine(exercise)), stream = useRef<MediaStream | null>(null), sourceUrl = useRef(""), frame = useRef(0), active = useRef(false), paused = useRef(false), isLocalVideo = useRef(false);
   const started = useRef(0), lastMedia = useRef(-1), observations = useRef(0), tracked = useRef(0), scores = useRef<number[]>([]), reps = useRef<Rep[]>([]), lastSpoken = useRef(0), finished = useRef(false);
   const aiInterval = useRef<number | null>(null), lastAICue = useRef("");
-  const [state, setState] = useState<"idle" | "loading" | "running" | "paused" | "finished">("idle"), [sample, setSample] = useState<Sample | null>(null), [error, setError] = useState(""), [localVideo, setLocalVideo] = useState(false), [sound, setSound] = useState(true), [progress, setProgress] = useState(0), [showGuide, setShowGuide] = useState(true), [aiEnabled, setAiEnabled] = useState(true);
+  const prevPoints = useRef<any[] | null>(null);
+  const [state, setState] = useState<"idle" | "loading" | "running" | "paused" | "finished">("idle"), [sample, setSample] = useState<Sample | null>(null), [error, setError] = useState(""), [localVideo, setLocalVideo] = useState(false), [sound, setSound] = useState(true), [progress, setProgress] = useState(0), [showGuide, setShowGuide] = useState(true), [aiEnabled, setAiEnabled] = useState(true), [mlEnabled, setMlEnabled] = useState(false);
 
   const cleanup = () => { active.current = false; cancelAnimationFrame(frame.current); if (aiInterval.current) { clearInterval(aiInterval.current); aiInterval.current = null; } stream.current?.getTracks().forEach(track => track.stop()); stream.current = null; if (video.current) { video.current.pause(); video.current.srcObject = null; } estimator.current?.close(); estimator.current = null; if (sourceUrl.current) URL.revokeObjectURL(sourceUrl.current); sourceUrl.current = ""; speechSynthesis?.cancel(); };
   useEffect(() => () => cleanup(), []);
 
   async function start(file?: File) {
-    setError(""); setState("loading"); cleanup(); finished.current = false; engine.current = new MovementEngine(exercise); observations.current = 0; tracked.current = 0; scores.current = []; reps.current = []; lastMedia.current = -1;
+    setError(""); setState("loading"); cleanup(); finished.current = false; engine.current = new MovementEngine(exercise); observations.current = 0; tracked.current = 0; scores.current = []; reps.current = []; lastMedia.current = -1; prevPoints.current = null;
     try {
       estimator.current = await createEstimator();
+      poseClassifier.load().then(ok => setMlEnabled(ok));
       if (file) {
         if (file.size > 150 * 1024 * 1024) throw new Error("Choose a video smaller than 150 MB.");
         sourceUrl.current = URL.createObjectURL(file); video.current!.src = sourceUrl.current; isLocalVideo.current = true; setLocalVideo(true);
@@ -72,7 +76,17 @@ export default function Trainer({ exercise, gender, onClose, onSaved }: { exerci
         const layer = canvas.current!; layer.width = current.videoWidth; layer.height = current.videoHeight;
         const context = layer.getContext("2d")!; context.clearRect(0, 0, layer.width, layer.height); drawSkeleton(context, points, layer.width, layer.height);
         const time = isLocalVideo.current ? current.currentTime : (performance.now() - started.current) / 1000;
-        const result = engine.current.update(points, time, layer.width, layer.height); observations.current++; if (result.tracked) tracked.current++; if (result.score !== null) scores.current.push(result.score);
+        let result = engine.current.update(points, time, layer.width, layer.height);
+        if (poseClassifier.isReady() && points.length >= 33) {
+          (async () => {
+            try {
+              const feats = extractFeatures(points, layer.width, layer.height, prevPoints.current || undefined);
+              await poseClassifier.predict(feats);
+            } catch {}
+          })();
+        }
+        prevPoints.current = points;
+        observations.current++; if (result.tracked) tracked.current++; if (result.score !== null) scores.current.push(result.score);
         if (result.reps > reps.current.length) reps.current.push({ number: result.reps, score: result.score, time });
         if (sound && result.cue && result.cue !== sample?.cue && performance.now() - lastSpoken.current > 6500) { speak(result.cue); lastSpoken.current = performance.now(); }
         setSample(result); if (isLocalVideo.current && Number.isFinite(current.duration)) setProgress(current.currentTime / current.duration * 100);
