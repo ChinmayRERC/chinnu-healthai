@@ -11,8 +11,13 @@ export class PoseClassifier {
   private model: tf.LayersModel | tf.GraphModel | null = null;
   private labels: string[] = [];
   private ready = false;
+  private enabled = localStorage.getItem('ml_pose_enabled') !== 'false';
+  
+  setEnabled(v: boolean) { this.enabled = v; localStorage.setItem('ml_pose_enabled', String(v)); }
+  isEnabled() { return this.enabled; }
   
   async load(modelUrl = '/models/pose-classifier/model.json', labelsUrl = '/models/pose-classifier/labels.json') {
+    if (!this.enabled) return false;
     try {
       await tf.ready();
       const [model, labels] = await Promise.all([

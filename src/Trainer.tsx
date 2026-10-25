@@ -63,7 +63,14 @@ export default function Trainer({ exercise, gender, onClose, onSaved }: { exerci
         }, 5000);
       }
       loop();
-    } catch (reason) { cleanup(); setState("idle"); setError(reason instanceof Error ? reason.message : "Camera or pose model could not start."); }
+    } catch (reason) { cleanup(); setState("idle"); 
+    const msg = reason instanceof Error ? reason.message : String(reason);
+    if (msg.includes('Permission denied') || msg.includes('NotAllowedError')) {
+      setError("Camera access denied. Please allow camera permissions in your browser settings and try again.");
+    } else {
+      setError(msg || "Camera or pose model could not start.");
+    }
+  }
   }
 
   function loop() {
@@ -77,7 +84,7 @@ export default function Trainer({ exercise, gender, onClose, onSaved }: { exerci
         const context = layer.getContext("2d")!; context.clearRect(0, 0, layer.width, layer.height); drawSkeleton(context, points, layer.width, layer.height);
         const time = isLocalVideo.current ? current.currentTime : (performance.now() - started.current) / 1000;
         let result = engine.current.update(points, time, layer.width, layer.height);
-        if (poseClassifier.isReady() && points.length >= 33) {
+        if (poseClassifier.isReady() && (poseClassifier as any).isEnabled?.() !== false && points.length >= 33) {
           (async () => {
             try {
               const feats = extractFeatures(points, layer.width, layer.height, prevPoints.current || undefined);
@@ -96,7 +103,18 @@ export default function Trainer({ exercise, gender, onClose, onSaved }: { exerci
     frame.current = requestAnimationFrame(loop);
   }
 
-  function togglePause() { paused.current = !paused.current; engine.current.suspend(); setState(paused.current ? "paused" : "running"); if (isLocalVideo.current) paused.current ? video.current?.pause() : void video.current?.play(); speechSynthesis?.cancel(); }
+  function togglePause() { 
+    paused.current = !paused.current; 
+    engine.current.suspend(); 
+    setState(paused.current ? "paused" : "running"); 
+    if (isLocalVideo.current) paused.current ? video.current?.pause() : void video.current?.play(); 
+    speechSynthesis?.cancel(); 
+    if (paused.current) {
+      cancelAnimationFrame(frame.current);
+    } else if (active.current) {
+      loop();
+    }
+  }
   function finish(stopped = false) {
     if (finished.current) return; finished.current = true;
     const duration = Math.round((performance.now() - started.current) / 1000), score = scores.current.length ? Math.round(scores.current.reduce((a, b) => a + b, 0) / scores.current.length) : null;
@@ -104,7 +122,7 @@ export default function Trainer({ exercise, gender, onClose, onSaved }: { exerci
     cleanup(); setState("finished"); onSaved(session);
   }
 
-  return <div className="trainer-page"><div className="trainer-head"><button className="back-btn" onClick={onClose}><ArrowLeft/>Back</button><div><span className="eyebrow">AI CAMERA COACH · GYM • YOGA • PRANAYAMA • FITNESS</span><h2>{exercise.name}</h2><p>{exercise.view} view · AI coach speaks naturally to guide you</p></div><div style={{display:'flex',gap:'8px',alignItems:'center'}}><button className="sound-btn" onClick={() => { setAiEnabled(v=>{ aiCoach.setEnabled(!v); if(v) aiCoach.speak("AI coach paused. I'll stay quiet now.", true); else aiCoach.speak("AI coach back. Let's keep going together.", true); return !v; }); }} title="Toggle AI Coach"><Brain/> {aiEnabled ? "AI On" : "AI Off"}</button><button className="sound-btn" onClick={() => { setSound(!sound); speechSynthesis?.cancel(); }}>{sound ? <Volume2/> : <VolumeX/>}{sound ? "Voice on" : "Voice off"}</button></div></div>
+  return <div className="trainer-page"><div className="trainer-head"><button className="back-btn" onClick={onClose}><ArrowLeft/>Back</button><div><span className="eyebrow">AI CAMERA COACH · GYM • YOGA • PRANAYAMA • FITNESS</span><h2>{exercise.name}</h2><p>{exercise.view} view · AI coach speaks naturally to guide you</p></div><div style={{display:'flex',gap:'8px',alignItems:'center',flexWrap:'wrap'}}><span style={{fontSize:'11px',padding:'4px 8px',borderRadius:'8px',background:mlEnabled?'rgba(52,199,89,0.12)':'rgba(142,142,147,0.12)',color:mlEnabled?'#34C759':'#8E8E93'}}>{mlEnabled ? 'ML Tracking' : 'Rule-based'}</span><button className="sound-btn" onClick={() => { setAiEnabled(v=>{ aiCoach.setEnabled(!v); if(v) aiCoach.speak("AI coach paused. I'll stay quiet now.", true); else aiCoach.speak("AI coach back. Let's keep going together.", true); return !v; }); }} title="Toggle AI Coach"><Brain/> {aiEnabled ? "AI On" : "AI Off"}</button><button className="sound-btn" onClick={() => { setSound(!sound); speechSynthesis?.cancel(); }}>{sound ? <Volume2/> : <VolumeX/>}{sound ? "Voice on" : "Voice off"}</button></div></div>
     <div className="trainer-layout"><div><div className="camera-stage"><video ref={video} muted playsInline/><canvas ref={canvas}/>{state === "idle" && <div className="camera-empty"><span><Camera/></span><h3>Your space. Your pace.</h3><p>Place the camera 2-3 m away with your full body visible and light in front of you.</p><button className="primary-btn" onClick={() => start()}><Camera/>Open camera</button><label className="soft-btn upload"><Upload/>Analyze local video<input type="file" accept="video/*" onChange={event => event.target.files?.[0] && void start(event.target.files[0])}/></label><small>Video never uploads. Maximum 2 minutes / 150 MB.</small></div>}{state === "loading" && <div className="camera-empty"><i className="spinner"/><h3>Loading pose model...</h3><p>The first launch can take a few seconds.</p></div>}{(state === "running" || state === "paused") && <><div className="stage-status"><b>{localVideo ? "LOCAL VIDEO" : "ON DEVICE"}</b><span>{sample?.tracked ? "Pose tracked" : "Finding pose"}</span></div><div className="stage-metrics"><div><strong>{exercise.phase ? sample?.reps ?? 0 : Math.floor(sample?.hold ?? 0)}</strong><small>{exercise.phase ? "REPS" : "HOLD SECONDS"}</small></div><div><strong>{sample?.score ?? "--"}</strong><small>EST. QUALITY</small></div></div><div className="live-cue">{state === "paused" ? "Paused. Take your time." : sample?.cue || "Finding your pose..."}</div></>}</div>{localVideo && state === "running" && <progress value={progress} max="100"/>}{error && <div className="error-box" role="alert">{error}</div>}{(state === "running" || state === "paused") && <div className="session-controls"><button className="soft-btn" onClick={togglePause}>{state === "paused" ? <Play/> : <Pause/>}{state === "paused" ? "Resume" : "Pause"}</button><button className="primary-btn" onClick={() => finish()}><Square/>Finish</button><button className="danger-btn" onClick={() => finish(true)}>Pain / stop</button></div>}{state === "finished" && <div className="success-box"><b>Session saved locally.</b><span>Your progress dashboard has been updated.</span><button className="primary-btn" onClick={onClose}>View exercises</button></div>}</div><aside><button className="guide-toggle" onClick={() => setShowGuide(!showGuide)}>{showGuide ? "Hide" : "Show"} movement guide</button>{showGuide && <ExerciseGuide exercise={exercise} gender={gender}/>}<div className="safety-panel"><b>Know the limit</b><p>Pose estimates can miss joints and cannot assess load, pain, spinal position, or injury risk. Stop if anything hurts and seek qualified guidance when needed.</p></div></aside></div>
   </div>;
 }

@@ -9,7 +9,10 @@
     "preview": "vite preview",
     "server": "node server.js",
     "start": "node server.js",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "ml:collect": "python ml/collect_poses.py",
+    "ml:train": "python ml/train_pose_classifier.py",
+    "api:spec": "node -e \"console.log('OpenAPI spec not yet generated')\""
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",
