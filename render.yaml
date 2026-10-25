@@ -13,5 +13,15 @@ services:
         sync: false
       - key: NVIDIA_API_KEY_2
         sync: false
+      - key: NVIDIA_OCR_KEY
+        sync: false
       - key: DATABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false

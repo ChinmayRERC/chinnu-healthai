@@ -46,3 +46,14 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Server-side Supabase (service role) - never expose to client
+import { createClient } from '@supabase/supabase-js';
+const supabaseAdmin = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY 
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    })
+  : null;
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', supabase: !!supabaseAdmin });
+});
