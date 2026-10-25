@@ -48,7 +48,9 @@ class ChinnuAgent {
     await this.ensurePermission();
     
     try {
-      const resp = await fetch('/api/agent', {
+      const base = (import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined) || '';
+      const url = base ? `${base}/agent` : '/api/agent';
+      const resp = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, context, history }),

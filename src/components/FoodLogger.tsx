@@ -121,7 +121,9 @@ export default function FoodLogger({ onClose, onAdd, initialMeal }: { onClose: (
     const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
     try {
       try {
-        const resp = await fetch('/api/food-recognize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: dataUrl }) });
+        const base = (import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined) || '';
+        const url = base ? `${base}/food-recognize` : '/api/food-recognize';
+        const resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: dataUrl }) });
         if (resp.ok) {
           const data = await resp.json();
           if (data.ok && data.result) { setScanResult(data.result); stopCamera(); setScanning(false); setSearching(false); return; }

@@ -55,7 +55,9 @@ export class AICameraCoach {
       
       // Try API first
       try {
-        const resp = await fetch('/api/coach-vision', {
+        const base = (import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined) || '';
+        const url = base ? `${base}/coach-vision` : '/api/coach-vision';
+        const resp = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
