@@ -9,3 +9,78 @@
 @media(max-width:1100px){:root{--nav:205px}.dashboard{grid-template-columns:1fr}.dashboard-rail{grid-template-columns:repeat(3,1fr)}.metric-grid{grid-template-columns:1fr 1fr}.exercise-grid{grid-template-columns:1fr 1fr}.workout-layout{grid-template-columns:1fr}.workout-summary{position:static}.trainer-layout{grid-template-columns:1fr}.trainer-layout aside{display:grid;grid-template-columns:1fr 1fr;gap:10px}.trainer-layout .guide-toggle{display:none}.progress-stats{grid-template-columns:1fr 1fr}}
 @media(max-width:760px){:root{--nav:0}.sidebar{display:none}.main{margin:0;padding:0 15px 92px}.topbar{height:116px}.topbar h1{font-size:21px}.topbar p{font-size:9px;max-width:270px}.avatar{display:block}.dashboard{display:block}.dashboard-rail{display:grid;grid-template-columns:1fr;margin-top:15px}.hero-card{display:block;padding:24px}.hero-card h2{font-size:30px}.daily-score{margin-top:25px}.metric-grid{grid-template-columns:1fr 1fr}.section-heading h2{font-size:17px}.bottom-nav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;inset:auto 0 0;background:#fff;border-top:1px solid var(--line);z-index:80;padding:7px 5px calc(7px + env(safe-area-inset-bottom))}.bottom-nav button{border:0;background:none;color:#889082;display:grid;justify-items:center;gap:2px;font-size:8px}.bottom-nav button svg{width:19px}.bottom-nav button.active{color:#5c842d}.page-title h2{font-size:29px}.page-title.split{display:block}.page-title.split .primary-btn{width:100%;margin-top:12px}.muscle-card{grid-template-columns:1fr}.muscle-copy{padding:25px}.muscle-copy h2{font-size:25px}.body-map{min-height:360px}.library-tools{display:grid;gap:10px}.library-tools label{width:100%}.library-tools .segmented{max-width:100%;overflow:auto}.exercise-grid{grid-template-columns:1fr 1fr;gap:9px}.exercise-art{height:125px}.exercise-card>div:last-child{padding:12px}.detail-hero{display:block;padding:25px}.detail-hero>.movement-glyph{display:none}.detail-hero h2{font-size:43px}.detail-facts{grid-template-columns:1fr}.guide-card{grid-template-columns:1fr;padding:15px}.guide-art svg{height:210px}.workout-row{grid-template-columns:35px 1fr 48px 55px 34px}.workout-row .delete-btn{display:none}.quick-add{grid-template-columns:1fr}.trainer-page{padding:18px 12px 40px}.trainer-head{grid-template-columns:1fr auto}.trainer-head>div{grid-column:1/-1;grid-row:1}.trainer-head .back-btn{grid-row:2;margin-top:13px}.trainer-head .sound-btn{grid-row:2}.camera-stage{aspect-ratio:3/4}.trainer-layout aside{display:block}.stage-metrics div{min-width:88px}.coach-page{display:block;min-height:calc(100vh - 210px)}.coach-context{display:none}.chat-panel{height:calc(100vh - 210px)}.prompt-row{padding:10px}.chat-messages{padding:12px}.message{max-width:88%}.progress-stats{grid-template-columns:1fr 1fr}.progress-grid{grid-template-columns:1fr}.history-list article{grid-template-columns:38px 1fr auto}.history-list article>strong{display:none}.set-target>span{width:140px}.form-row{grid-template-columns:1fr}.toast{bottom:82px;right:15px}.player-content h2{font-size:48px}}
 @media(max-width:430px){.metric-grid,.exercise-grid,.progress-stats{grid-template-columns:1fr}.hero-actions .primary-btn,.hero-actions .soft-btn{width:100%}.meal-row{grid-template-columns:38px 1fr auto}.meal-row>svg{display:none}.exercise-art{height:145px}.workout-row{grid-template-columns:30px 1fr 45px 50px}.workout-row .camera-btn{display:none}.page-title p{font-size:11px}.detail-hero>div>div{display:grid}.detail-hero .primary-btn,.detail-hero .soft-btn{width:100%}.set-target{gap:8px}.set-target>span{width:125px}.set-target strong{font-size:38px}.gender-modal{padding:24px 15px}.gender-modal h2{font-size:26px}.gender-options{gap:8px}.gender-options>button>div{height:190px}.gender-figure{height:180px;width:110px}.gender-options>button>span{padding:12px}.gender-options>button>span b{font-size:15px}.gender-options>button>span small{font-size:8px}.gender-options>button>svg:last-child{right:8px;bottom:15px}}
+
+/* Override v2 styles - restore original green-and-white theme and fix overlaps */
+:root {
+  --ink: #22271f !important;
+  --muted: #73796f !important;
+  --line: #e2e5da !important;
+  --green: #557c2d !important;
+  --lime: #dff2a9 !important;
+  --dark: #1f291c !important;
+  --surface: #fff !important;
+}
+
+body {
+  background: radial-gradient(1200px 800px at 80% -10%, rgba(223,242,169,.25), transparent), #f6f7f2 !important;
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+  color: #22271f !important;
+}
+
+.app-shell {
+  background: #f6f7f2 !important;
+}
+
+.sidebar {
+  background: #fff !important;
+  border-right: 1px solid #e2e5da !important;
+}
+
+.sidebar nav button {
+  color: #71796d !important;
+}
+
+.sidebar nav button:hover,
+.sidebar nav button.active {
+  background: #eef5df !important;
+  color: #456b20 !important;
+}
+
+.main-content,
+.app-main {
+  background: #f6f7f2 !important;
+}
+
+.topbar {
+  background: transparent !important;
+}
+
+.card,
+.panel,
+.metric-card,
+.meal-row,
+.exercise-card {
+  background: #fff !important;
+  border: 1px solid #e2e5da !important;
+}
+
+.primary-btn {
+  background: #bfe461 !important;
+  color: #253017 !important;
+}
+
+.soft-btn {
+  background: #eef1e8 !important;
+  color: #3f4939 !important;
+}
+
+/* Fix potential overlaps */
+.app-main {
+  margin-left: var(--nav, 230px) !important;
+}
+
+@media (max-width: 760px) {
+  .app-main {
+    margin-left: 0 !important;
+  }
+}
