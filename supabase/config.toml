@@ -38,4 +38,11 @@ double_confirm_changes = true
 enable_confirmations = false
 
 [functions]
+[functions.agent]
+verify_jwt = false
+[functions.coach-vision]
+verify_jwt = false
+[functions.food-recognize]
+verify_jwt = false
+[functions.meals-store]
 verify_jwt = false
