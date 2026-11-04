@@ -1,66 +1,59 @@
 # Chinnu HealthAI
 
-An original health and movement companion built with React 19, TypeScript, Vite, and Tauri 2.
+A privacy-focused health & fitness companion built for real life. Track food, movement, recovery, yoga, workouts, and get AI coaching — all in one app.
 
-## Included
+## Live Demo
 
-- Daily nutrition, hydration, steps, sleep, and weight dashboard
-- Interactive front/back muscle map and 15 original guided movements
-- Persistent Male or Female profile selection with matching body maps and exercise illustrations
-- Search and Gym, Yoga, and Breathing filters
-- Original movement diagrams, setup instructions, and safety notes
-- Configurable workout builder with sets, targets, set completion, and 60-second rest timer
-- On-device MediaPipe camera and local-video pose guidance
-- Rep and hold tracking, visible-pose quality estimates, spoken local cues, and session history
-- Progress dashboard for measured sessions, completed workouts, and recovery signals
-- Chinnu text coach using the existing Render/NVIDIA service
-- Explicit-consent NVIDIA microphone coach with a clear offline fallback
-- Local persistence through `localStorage`
-- Responsive desktop and mobile layouts
+[**https://chinnu-healthai-v2.onrender.com/**](https://chinnu-healthai-v2.onrender.com/)
 
-## Privacy model
+![Chinnu HealthAI Login Page](login-page.png)
 
-Daily data, workouts, session history, selected videos, and camera frames stay on the device. The pose model runs locally. Selected video files are opened with an object URL and are not uploaded.
+## New Features
 
-Text prompts and the compact day/workout context are sent to `https://chinnu-ai.onrender.com` when the coach is used. Microphone audio is sent only after the user checks the consent box and enables voice. Provider credentials remain on the server.
+- **AI Coach (Chat)** - Conversational health & fitness assistant powered by NVIDIA models via Supabase Edge Functions
+- **Real-Time AI Vision Coach** - Camera-based form coaching with live cues during workouts/yoga
+- **Food Recognition** - Snap a photo of your meal to instantly get calories, protein, carbs, fat & fiber
+- **Supabase Integration** - Auth (Email Magic Link, Google, GitHub), cloud sync, and secure data storage
+- **Meals Database** - Track meals with Supabase Postgres storage
+- **On-Device Camera Coaching** - Pose tracking with TensorFlow.js/MediaPipe for form analysis
+- **Yoga & Guided Workouts** - Built-in library with exercise details, videos, and trainer mode
+- **Progress Tracking** - Monitor steps, water, sleep, weight, and workout history
+- **PWA Support** - Install as an app on mobile/desktop with offline capabilities
+- **Dark/Light Optimized UI** - Clean, modern interface built with React + TypeScript + Vite
 
-## Run
+## Tech Stack
+
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS
+- **Backend:** Supabase (Auth, Postgres, Edge Functions, Storage)
+- **AI/ML:** NVIDIA API, TensorFlow.js, MediaPipe
+- **Deployment:** Render
+
+## Getting Started
 
 ```bash
+# Install dependencies
 npm install
+
+# Run development server
 npm run dev
-```
 
-Build the web app:
-
-```bash
+# Build for production
 npm run build
+
+# Preview production build
+npm run preview
 ```
 
-Build the macOS Tauri app:
+## Environment Variables
 
-```bash
-npm run tauri build
+Create a `.env` file with the following:
+
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_SUPABASE_FUNCTIONS_URL=your_supabase_functions_url
 ```
 
-The verified debug bundle is produced at `src-tauri/target/debug/bundle/macos/Chinnu HealthAI.app`.
+## License
 
-## Local pose assets
-
-The app bundles MediaPipe Tasks Vision and the Pose Landmarker Lite model under `public/models`. The model and WASM runtime are loaded from the packaged app, not a CDN. The upstream Apache 2.0 notice is retained at `public/mediapipe-LICENSE.txt`.
-
-## Platform notes
-
-- macOS camera and microphone usage descriptions are in `src-tauri/Info.plist`.
-- Camera and microphone access still require user approval from the operating system.
-- Android packaging requires the Tauri Android prerequisites and generated mobile project permissions before release testing.
-- Local speech cues depend on the WebView's speech-synthesis support; visual cues remain available without it.
-- Cloud voice requires network access, Web Audio, AudioWorklet, and microphone support in the host WebView.
-
-## Safety limits
-
-This app supports general wellness and exercise practice. Pose estimates can miss joints and cannot assess pain, injury, force, load, spinal curvature, or whether a movement is medically appropriate. Exercise diagrams and thresholds are instructional prototypes and should receive qualified expert review before clinical or prescriptive use.
-
-## Attribution boundary
-
-The product recreates common health and workout workflows with original Chinnu code, copy, diagrams, styling, and exercise data. It does not include MuscleWiki code, branding, artwork, videos, or proprietary exercise content.
+MIT
