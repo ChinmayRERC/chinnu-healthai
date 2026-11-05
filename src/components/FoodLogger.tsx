@@ -119,37 +119,31 @@ export default function FoodLogger({ onClose, onAdd, initialMeal }: { onClose: (
     canvas.width = video.videoWidth || 640;
     canvas.height = video.videoHeight || 480;
     const ctx = canvas.getContext('2d');
-    ctx?.drawImage(video, 0, 0);
+    if (!ctx) { setSearching(false); return; }
+    ctx.drawImage(video, 0, 0);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
     try {
-      try {
-        const base = (import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined) || '';
-        const url = base ? `${base}/food-recognize` : '/api/food-recognize';
-        const resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: dataUrl }) });
-        if (resp.ok) {
-          const data = await resp.json();
-          if (data.ok && data.result) { setScanResult(data.result); stopCamera(); setScanning(false); setSearching(false); return; }
-        }
-      } catch {}
-      const keys = ['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'];
-      for (const key of keys) {
-        try {
-          const resp = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model: 'nvidia/nemotron-nano-12b-v2-vl', messages: [{ role: 'user', content: [{ type: 'text', text: 'Identify this food. Return ONLY valid JSON: {"name":"","calories":0,"protein":0,"carbs":0,"fat":0,"fiber":0,"serving":"100g","confidence":0.9}. Be accurate with Indian and global foods.' }, { type: 'image_url', image_url: { url: dataUrl } }] }], max_tokens: 300, temperature: 0.1 })
-          });
-          if (resp.ok) {
-            const data = await resp.json();
-            const text = data.choices?.[0]?.message?.content || '';
-            const match = text.match(/\{[\s\S]*\}/);
-            if (match) { const parsed = JSON.parse(match[0]); setScanResult(parsed); stopCamera(); setScanning(false); setSearching(false); return; }
-          }
-        } catch {}
+      const base = ((import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined) || '').replace(/\/+$/, '');
+      const url = base ? base + '/food-recognize' : '/api/food-recognize';
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: dataUrl }),
+        signal: AbortSignal.timeout(30000),
+      });
+      const data = await resp.json();
+      if (resp.ok && data.ok && data.result) {
+        setScanResult(data.result);
+        stopCamera();
+        setScanning(false);
+      } else {
+        alert(tr('Could not identify food'));
       }
-      alert('Could not identify food');
-    } catch { alert('Recognition failed'); }
-    setSearching(false);
+    } catch {
+      alert(tr('Recognition failed'));
+    } finally {
+      setSearching(false);
+    }
   }
 
   function addScanned() {

@@ -1,11 +1,10 @@
-# Pose Tracking ML Model
+# Experimental pose-classifier training
 
-This adds a trainable ML classifier on top of MediaPipe Pose for better rep counting, phase detection, and form scoring for gym and yoga.
+This folder keeps optional data collection and training scripts for future model work. The browser app currently uses MediaPipe Pose Lite and its rule engine. The TensorFlow.js classifier described here is not loaded by the app and does not affect repetitions, form cues, or safety guidance.
 
-## Quick Start (Inference)
+## Experimental export
 
-1. Train a model (see below) and export to `public/models/pose-classifier/` with `model.json`, `*.bin`, and `labels.json`
-2. The app will auto-load it in Trainer - ML predictions augment the rule-based engine
+The training script can export a TensorFlow.js model for experiments. It is not part of the current mobile tracking path. Exercise recognition over time is a later feature and should be evaluated on representative data before it is connected to the app.
 
 ## Collect Training Data
 
@@ -23,15 +22,13 @@ pip install tensorflow scikit-learn tensorflowjs
 python ml/train_pose_classifier.py --data data/poses.csv --out public/models/pose-classifier --epochs 100
 ```
 
-## Features
+## Feature preparation
 
 - Scale/position invariant (torso-normalized)
 - Joint angles, symmetry, velocities
-- Temporal smoothing (EMA)
-- Works for gym (reps) and yoga (holds/alignment)
-- GPU accelerated in browser via WebGL
+- Produces pose features for offline experiments.
+- Current rep counts and supported form cues remain in the app's rule engine.
 
 ## Model Architecture
 
-Simple MLP: 96 input features -> 256 -> 128 -> 64 -> num_classes (softmax)
-Trained with dropout + batch norm for generalization.
+The current experimental script trains a simple MLP from collected pose features. It is not a temporal exercise-recognition model and should not be treated as a medical or safety system.

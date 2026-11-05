@@ -1655,6 +1655,16 @@
   font-size: 12px;
 }
 
+.trainer-loading-shell {
+  min-height: calc(100dvh - 64px);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .trainer-overlay .trainer-page {
   max-width: 1440px;
   margin: 0 auto;
@@ -1703,6 +1713,15 @@
 .trainer-overlay .sound-btn svg {
   width: 16px;
   height: 16px;
+}
+
+.trainer-overlay .trainer-mode {
+  padding: 6px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--signal-soft);
+  color: var(--accent-hover);
+  font-size: 10px;
+  font-weight: 750;
 }
 
 .trainer-overlay .trainer-layout {
@@ -1820,6 +1839,50 @@
   font-size: 8px;
 }
 
+.trainer-overlay .scene-ready {
+  position: absolute;
+  top: 54px;
+  left: 15px;
+  padding: 6px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: var(--radius-pill);
+  background: rgba(10, 16, 12, 0.58);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 8px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.trainer-overlay .scene-context {
+  position: absolute;
+  top: 88px;
+  left: 15px;
+  right: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  max-height: 58px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.trainer-overlay .scene-context > span {
+  padding: 6px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-pill);
+  background: rgba(10, 16, 12, 0.58);
+  color: #fff;
+  font-size: 9px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.trainer-overlay .scene-context small {
+  margin-left: 5px;
+  color: var(--signal);
+  font-size: 8px;
+}
+
 .trainer-overlay .stage-metrics {
   position: absolute;
   left: 16px;
@@ -1909,6 +1972,14 @@
 .trainer-overlay .safety-panel p {
   margin: 4px 0 0;
   color: #6d5a3d;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.trainer-overlay .scene-safety-note {
+  display: block;
+  margin-top: 9px;
+  color: var(--muted);
   font-size: 10px;
   line-height: 1.5;
 }

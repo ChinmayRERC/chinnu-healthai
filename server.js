@@ -1,4 +1,5 @@
 import express from 'express';
+import { existsSync } from 'node:fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -42,6 +43,26 @@ async function loadApi() {
 await loadApi();
 
 // Static files
+app.get('/onnxruntime/ort-wasm-simd-threaded.wasm', (req, res, next) => {
+  const runtimeDir = path.join(__dirname, 'dist', 'onnxruntime');
+  const rawPath = path.join(runtimeDir, 'ort-wasm-simd-threaded.wasm');
+  const gzipPath = rawPath + '.gz';
+  if (req.get('accept-encoding')?.includes('gzip') && existsSync(gzipPath)) {
+    res.setHeader('Content-Type', 'application/wasm');
+    res.setHeader('Content-Encoding', 'gzip');
+    res.setHeader('Vary', 'Accept-Encoding');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.sendFile(gzipPath, (error) => { if (error && !res.headersSent) next(error); });
+    return;
+  }
+  if (existsSync(rawPath)) {
+    res.setHeader('Content-Type', 'application/wasm');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.sendFile(rawPath, (error) => { if (error && !res.headersSent) next(error); });
+    return;
+  }
+  next();
+});
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // SPA fallback

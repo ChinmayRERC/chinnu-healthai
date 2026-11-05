@@ -127,7 +127,7 @@ Camera-based form coaching for workouts:
 - **Rep Counting** - Automatic rep counting with form validation
 - **Phase Detection** - Identifies exercise phases (eccentric, concentric, isometric)
 - **Session Saving** - Save coaching sessions with scores and feedback
-- **On-Device Processing** - Pose detection runs in browser, no video sent to server
+- **On-Device Processing** - MediaPipe pose and optional YOLO object detection run in the browser; optional AI coaching requests may send selected frames to the configured service
 
 ### 7. Progress & Analytics
 Track your fitness journey over time:
@@ -163,7 +163,7 @@ User management and data synchronization:
 2. **Local Storage** - Data saved to browser localStorage immediately
 3. **Cloud Sync** (optional) - If signed in, data syncs to Supabase
 4. **AI Features** - Requests routed through Supabase Edge Functions
-5. **ML Processing** - On-device pose detection via TensorFlow.js
+5. **ML Processing** - MediaPipe Pose Lite runs locally; an optional YOLOv8 ONNX model checks equipment and surroundings on-device when custom weights are installed
 
 ### Authentication Flow
 
@@ -293,8 +293,8 @@ supabase/
 | Vite | 7.1.7 | Build Tool |
 | React Router | (state-based) | Navigation |
 | Lucide React | 0.542.0 | Icons |
-| TensorFlow.js | 4.22.0 | On-device ML |
-| MediaPipe | 0.10.22 | Pose Detection |
+| MediaPipe Tasks Vision | 0.10.35 | Pose Detection |
+| ONNX Runtime Web | 1.31.1 | Optional on-device YOLO detection |
 
 ### Backend
 
@@ -312,7 +312,8 @@ supabase/
 | NVIDIA API | LLaMA 3.1 70B Instruct | AI Coach Chat |
 | NVIDIA API | Nemotron Nano 12B VL | Food Recognition |
 | NVIDIA API | Nemotron Nano 12B VL | Vision Coaching |
-| TensorFlow.js | MoveNet/BlazePose | On-Device Pose Detection |
+| MediaPipe Tasks Vision | Pose Landmarker Lite | On-Device Body Tracking |
+| ONNX Runtime Web | Custom YOLOv8 ONNX | Optional equipment and environment detection |
 
 ### DevOps & Deployment
 
@@ -362,16 +363,20 @@ supabase/
 - **Response Time:** ~1-3 seconds per frame
 - **Exercise Support:** Squats, pushups, lunges, planks, and more
 
-### 4. On-Device Pose Detection
-- **Library:** TensorFlow.js with MoveNet/BlazePose
-- **Processing:** Real-time pose estimation in browser
+### 4. On-Device Exercise Vision
+- **Body tracking:** MediaPipe Pose Landmarker Lite, running in the browser
+- **Optional scene checks:** A custom YOLOv8 ONNX model can identify configured equipment and environment classes when added under public/models/equipment/
+- **Mobile pacing:** Camera requests 640×480 at about 15 FPS; YOLO uses a 320×320 frame at most every 750 ms
+- **Model loading:** ONNX Runtime Web is imported only when a local model and manifest are present; WASM CPU execution works across mobile browsers
+- **Processing:** Camera frames stay on the device for pose and YOLO inference
 - **Features:**
   - 33-point body landmark tracking
   - Joint angle calculations
   - Rep counting
-  - Form validation
-- **Privacy:** All pose data processed locally, no video sent to server
-- **Performance:** 30+ FPS on modern devices
+  - Rule-based known form cues
+  - Equipment-to-wrist proximity as simple visual context
+- **Boundaries:** YOLO detections never decide medical or exercise safety and never override the rule engine
+- **Model availability:** No equipment weights are bundled; follow [docs/on-device-exercise-vision.md](docs/on-device-exercise-vision.md) to add a custom model
 
 ---
 
@@ -461,7 +466,7 @@ supabase/
 
 - **Row Level Security** - Database enforces per-user data isolation
 - **No Password Storage** - Uses magic links and OAuth (no passwords stored)
-- **On-Device ML** - Pose detection runs entirely in browser
+- **On-Device Vision** - MediaPipe and optional YOLO inference run in the browser; optional AI vision coaching can send selected frames to its configured service
 - **API Key Protection** - All AI API keys stored as server-side secrets in Supabase
 - **CORS Protection** - Proper CORS headers on all Edge Functions
 - **HTTPS Only** - All traffic encrypted in transit
@@ -640,8 +645,8 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 - **NVIDIA** - AI models and API
 - **Supabase** - Backend infrastructure
-- **TensorFlow.js** - On-device ML
 - **MediaPipe** - Pose detection
+- **ONNX Runtime Web** - Optional on-device object detection
 - **React Team** - UI framework
 - **Vite Team** - Build tooling
 

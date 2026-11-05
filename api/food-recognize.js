@@ -5,7 +5,6 @@ const NVIDIA_KEYS = [
   process.env.NVIDIA_API_KEY_1,
   process.env.NVIDIA_API_KEY_2,
 ].filter(Boolean);
-];
 
 const PROMPT = `You are an expert food recognition and nutrition estimator for Indian and global foods.
 

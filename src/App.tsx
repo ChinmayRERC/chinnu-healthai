@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Check, HeartPulse, X } from "lucide-react";
 import { StoreProvider, useStore } from "./lib/store";
 import { generateRoutine } from "./lib/plan";
@@ -10,20 +10,20 @@ import FoodLogger from "./components/FoodLogger";
 import YouTubeModal from "./components/YouTubeModal";
 import WorkoutPlayer from "./components/WorkoutPlayer";
 import { ConfirmModal, ValueModal, WaterModal } from "./components/LogModals";
-import Today from "./pages/Today";
-import Yoga from "./pages/Yoga";
-import Explore from "./pages/Explore";
-import ExerciseDetail from "./pages/ExerciseDetail";
-import Workout from "./pages/Workout";
-import Coach from "./pages/Coach";
-import Progress from "./pages/Progress";
-import ProfilePage from "./pages/Profile";
-import Routine from "./pages/Routine";
-import Trainer from "./Trainer";
 import LoginPage from "./components/LoginPage";
 import { useLocale } from "./lib/locale";
 
 const LOCAL_MODE_KEY = "chinnu-local-mode";
+const Trainer = lazy(() => import("./Trainer"));
+const Today = lazy(() => import("./pages/Today"));
+const Yoga = lazy(() => import("./pages/Yoga"));
+const Explore = lazy(() => import("./pages/Explore"));
+const ExerciseDetail = lazy(() => import("./pages/ExerciseDetail"));
+const Workout = lazy(() => import("./pages/Workout"));
+const Coach = lazy(() => import("./pages/Coach"));
+const Progress = lazy(() => import("./pages/Progress"));
+const ProfilePage = lazy(() => import("./pages/Profile"));
+const Routine = lazy(() => import("./pages/Routine"));
 
 type ModalMetric = "steps" | "sleep" | "weight" | null;
 
@@ -216,54 +216,56 @@ function Shell() {
             onProfile={() => go("Profile")}
           />
           <main id="main-content" className="main-content">
-            {detailId ? (
-              <ExerciseDetail
-                id={detailId}
-                onBack={() => { setDetailId(null); setSection(detailOrigin); }}
-                backLabel={detailBackLabel}
-                onOpenVideo={(id) => setVideoId(id)}
-                onStartTrainer={handleTrain}
-                onNotify={notify}
-                onOpenExercise={openExercise}
-              />
-            ) : section === "Today" ? (
-              <Today
-                onLogFood={openFood}
-                onLogWater={() => setWaterOpen(true)}
-                onLogSteps={() => setMetric("steps")}
-                onLogSleep={() => setMetric("sleep")}
-                onLogWeight={() => setMetric("weight")}
-                onOpenExercise={openExercise}
-                onStartWorkout={startWorkout}
-                onGeneratePlan={handleGeneratePlan}
-                onNavigate={go}
-              />
-            ) : section === "Yoga" ? (
-              <Yoga onOpenExercise={openExercise} onOpenVideo={(id) => setVideoId(id)} onStartTrainer={handleTrain} />
-            ) : section === "Explore" ? (
-              <Explore onOpenExercise={openExercise} onOpenVideo={(id) => setVideoId(id)} />
-            ) : section === "Routine" ? (
-              <Routine
-                onOpenExercise={openExercise}
-                onStartRoutineDay={startRoutineDay}
-                onNavigate={go}
-                onNotify={notify}
-              />
-            ) : section === "Workout" ? (
-              <Workout
-                onOpenExercise={openExercise}
-                onStartWorkout={startWorkout}
-                onTrain={handleTrain}
-                onNotify={notify}
-                onNavigateExplore={() => go("Explore")}
-              />
-            ) : section === "Coach" ? (
-              <Coach onNavigate={go} />
-            ) : section === "Progress" ? (
-              <Progress onLogWeight={() => setMetric("weight")} />
-            ) : (
-              <ProfilePage onNotify={notify} />
-            )}
+            <Suspense fallback={<div className="page-loading-shell" role="status">{tr("Loading")}</div>}>
+              {detailId ? (
+                <ExerciseDetail
+                  id={detailId}
+                  onBack={() => { setDetailId(null); setSection(detailOrigin); }}
+                  backLabel={detailBackLabel}
+                  onOpenVideo={(id) => setVideoId(id)}
+                  onStartTrainer={handleTrain}
+                  onNotify={notify}
+                  onOpenExercise={openExercise}
+                />
+              ) : section === "Today" ? (
+                <Today
+                  onLogFood={openFood}
+                  onLogWater={() => setWaterOpen(true)}
+                  onLogSteps={() => setMetric("steps")}
+                  onLogSleep={() => setMetric("sleep")}
+                  onLogWeight={() => setMetric("weight")}
+                  onOpenExercise={openExercise}
+                  onStartWorkout={startWorkout}
+                  onGeneratePlan={handleGeneratePlan}
+                  onNavigate={go}
+                />
+              ) : section === "Yoga" ? (
+                <Yoga onOpenExercise={openExercise} onOpenVideo={(id) => setVideoId(id)} onStartTrainer={handleTrain} />
+              ) : section === "Explore" ? (
+                <Explore onOpenExercise={openExercise} onOpenVideo={(id) => setVideoId(id)} />
+              ) : section === "Routine" ? (
+                <Routine
+                  onOpenExercise={openExercise}
+                  onStartRoutineDay={startRoutineDay}
+                  onNavigate={go}
+                  onNotify={notify}
+                />
+              ) : section === "Workout" ? (
+                <Workout
+                  onOpenExercise={openExercise}
+                  onStartWorkout={startWorkout}
+                  onTrain={handleTrain}
+                  onNotify={notify}
+                  onNavigateExplore={() => go("Explore")}
+                />
+              ) : section === "Coach" ? (
+                <Coach onNavigate={go} />
+              ) : section === "Progress" ? (
+                <Progress onLogWeight={() => setMetric("weight")} />
+              ) : (
+                <ProfilePage onNotify={notify} />
+              )}
+            </Suspense>
           </main>
           <BottomNav section={activeSection} onNavigate={go} />
         </div>
@@ -373,16 +375,18 @@ function Shell() {
             <span><HeartPulse /> {tr("On-device camera coach")}</span>
             <button className="soft-btn" onClick={() => setTrainerId(null)}><X /> {tr("Close")}</button>
           </div>
-          <Trainer
-            exercise={trainerExercise}
-            gender={data.profile.gender || "male"}
-            onClose={() => setTrainerId(null)}
-            onSaved={(session) => {
-              addTrainingSession(session);
-              setTrainerId(null);
-              notify(`${session.name} session saved${session.score !== null ? ` · score ${session.score}` : ""}`);
-            }}
-          />
+          <Suspense fallback={<div className="trainer-loading-shell" role="status">{tr("Loading pose model...")}</div>}>
+            <Trainer
+              exercise={trainerExercise}
+              gender={data.profile.gender || "male"}
+              onClose={() => setTrainerId(null)}
+              onSaved={(session) => {
+                addTrainingSession(session);
+                setTrainerId(null);
+                notify(`${session.name} session saved${session.score !== null ? ` · score ${session.score}` : ""}`);
+              }}
+            />
+          </Suspense>
         </div>
       )}
 
