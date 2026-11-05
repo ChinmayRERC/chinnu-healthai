@@ -20,6 +20,10 @@ import Progress from "./pages/Progress";
 import ProfilePage from "./pages/Profile";
 import Routine from "./pages/Routine";
 import Trainer from "./Trainer";
+import LoginPage from "./components/LoginPage";
+import { useLocale } from "./lib/locale";
+
+const LOCAL_MODE_KEY = "chinnu-local-mode";
 
 type ModalMetric = "steps" | "sleep" | "weight" | null;
 
@@ -34,6 +38,8 @@ export default function App() {
 function Shell() {
   const {
     data,
+    session,
+    authReady,
     targets,
     cloudStatus,
     updateProfile,
@@ -43,6 +49,10 @@ function Shell() {
     addTrainingSession,
     setWorkout,
   } = useStore();
+  const { t } = useLocale();
+  const [localMode, setLocalMode] = useState(() => {
+    try { return localStorage.getItem(LOCAL_MODE_KEY) === "1"; } catch { return false; }
+  });
   const [section, setSection] = useState<Section>("Today");
   const [detailId, setDetailId] = useState<string | null>(null);
   const [detailOrigin, setDetailOrigin] = useState<Section>("Explore");
@@ -78,8 +88,8 @@ function Shell() {
   }, [section, detailId]);
 
   useEffect(() => {
-    document.title = detailId ? "Exercise guide · Chinnu HealthAI" : `${section} · Chinnu HealthAI`;
-  }, [section, detailId]);
+    document.title = detailId ? `${t("exerciseGuide")} · Chinnu HealthAI` : `${t(`nav${section}` as "navToday" | "navYoga" | "navRoutine" | "navExplore" | "navWorkout" | "navCoach" | "navProgress" | "navProfile")} · Chinnu HealthAI`;
+  }, [section, detailId, t]);
 
   function go(next: Section) {
     setDetailId(null);
@@ -162,6 +172,14 @@ function Shell() {
           : detailOrigin === "Profile"
             ? "Back to profile"
             : "All exercises";
+
+  function continueLocally() {
+    try { localStorage.setItem(LOCAL_MODE_KEY, "1"); } catch { /* local mode still works for this visit */ }
+    setLocalMode(true);
+  }
+
+  if (!authReady) return <main className="login-loading" aria-label="Loading"><span /></main>;
+  if (!session && !localMode) return <LoginPage onContinue={continueLocally} />;
 
   if (!data.profile.onboarded) {
     return (
@@ -276,9 +294,9 @@ function Shell() {
 
       {metric === "steps" && (
         <ValueModal
-          title="Log today's steps"
-          eyebrow="DAILY MOVEMENT"
-          description="An approximate phone or watch total is enough. The trend matters more than one exact number."
+          title={t("logTodaysSteps")}
+          eyebrow={t("dailyMovement")}
+          description={t("stepsHint")}
           icon="steps"
           unit="steps"
           initial={data.day.steps}
@@ -296,9 +314,9 @@ function Shell() {
 
       {metric === "sleep" && (
         <ValueModal
-          title="How did you sleep?"
-          eyebrow="RECOVERY"
-          description="Use last night's actual sleep, not the time you spent in bed. A rough estimate is fine."
+          title={t("logSleep")}
+          eyebrow={t("recovery")}
+          description={t("sleepHint")}
           icon="sleep"
           unit="hours"
           initial={data.day.sleep}
@@ -316,9 +334,9 @@ function Shell() {
 
       {metric === "weight" && (
         <ValueModal
-          title="Log your weight"
-          eyebrow="BODY TREND"
-          description="Use the same scale and time of day when you can. A single weigh-in is noise; the weekly trend is the signal."
+          title={t("logWeight")}
+          eyebrow={t("bodyTrend")}
+          description={t("weightHint")}
           icon="weight"
           unit={metricWeightUnit}
           initial={data.profile.units === "imperial" ? Math.round((data.day.weight || data.profile.weightKg || 0) * 2.20462) : data.day.weight || data.profile.weightKg || 0}

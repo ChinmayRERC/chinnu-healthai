@@ -30,6 +30,8 @@ import {
 } from "../lib/profile";
 import type { Activity, Experience, Gender, Goal, Profile, Units } from "../types";
 import { ConfirmModal } from "../components/LogModals";
+import { LegalDialog, type LegalPage } from "../components/LoginPage";
+import { useLocale } from "../lib/locale";
 
 const EQUIPMENT = ["body only", "dumbbell", "barbell", "machine", "cable", "bands", "kettlebells", "other"];
 
@@ -84,6 +86,8 @@ function draftFromProfile(profile: Profile): Draft {
 }
 
 export default function ProfilePage({ onNotify }: { onNotify: (message: string) => void }) {
+  const { t } = useLocale();
+  const [legalPage, setLegalPage] = useState<LegalPage>(null);
   const {
     data,
     targets,
@@ -488,6 +492,14 @@ export default function ProfilePage({ onNotify }: { onNotify: (message: string) 
           </article>
         </aside>
       </div>
+
+      <footer className="profile-legal-links">
+        <span>Chinnu HealthAI</span>
+        <button onClick={() => setLegalPage("terms")}>{t("terms")}</button>
+        <button onClick={() => setLegalPage("privacy")}>{t("privacy")}</button>
+      </footer>
+
+      {legalPage && <LegalDialog page={legalPage} onClose={() => setLegalPage(null)} />}
 
       {confirmReset && (
         <ConfirmModal

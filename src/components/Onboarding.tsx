@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { Activity, Experience, Gender, Goal, Profile, Units } from "../types";
 import { libraryById } from "../lib/library";
+import { useLocale } from "../lib/locale";
 
 const GOALS: { value: Goal; title: string; copy: string; icon: typeof Target }[] = [
   { value: "lose", title: "Lose fat", copy: "A gentle deficit with enough protein", icon: TrendingUp },
@@ -44,6 +45,7 @@ export default function Onboarding({
   onComplete: (patch: Partial<Profile>) => void;
   onSkip: () => void;
 }) {
+  const { t, locale } = useLocale();
   const [step, setStep] = useState(0);
   const [name, setName] = useState(profile.name);
   const [gender, setGender] = useState<Gender | null>(profile.gender);
@@ -64,7 +66,8 @@ export default function Onboarding({
   const weightValue = Number(weight);
   const heightValue = Number(height);
   const ageValue = Number(age);
-  const weightLabel = units === "imperial" ? "Weight (lb)" : "Weight (kg)";
+  const weightLabel = units === "imperial" ? (locale === "hi" ? "वज़न (पाउंड)" : locale === "kn" ? "ತೂಕ (ಪೌಂಡ್)" : "Weight (lb)") : t("weightKg");
+  const stepLabel = locale === "hi" ? `3 में से ${step + 1}` : locale === "kn" ? `3 ರಲ್ಲಿ ${step + 1}` : `${step + 1} of 3`;
 
   function changeUnits(next: Units) {
     if (next === units) return;
@@ -112,31 +115,31 @@ export default function Onboarding({
               <span className="brand-mark"><HeartPulse /></span>
               <span><b>CHINNU</b><small>HEALTH + MOVEMENT</small></span>
             </div>
-            <button className="skip-link" onClick={onSkip}>Skip setup</button>
+            <button className="skip-link" onClick={onSkip}>{t("skipSetup")}</button>
           </header>
 
-          <div className="onboarding-progress" aria-label={`Step ${step + 1} of 3`}>
+          <div className="onboarding-progress" aria-label={stepLabel}>
             {[0, 1, 2].map((index) => <i key={index} className={index <= step ? "active" : ""} />)}
-            <span>{step + 1} of 3</span>
+            <span>{stepLabel}</span>
           </div>
 
           <div className="onboarding-body">
             {step === 0 && (
               <div className="onboarding-step">
-                <span className="eyebrow"><Sparkles /> A CALMER WAY TO GET FIT</span>
-                <h1>Let’s make this <em>yours.</em></h1>
-                <p className="step-intro">No perfect answers needed. You can change everything later.</p>
+                <span className="eyebrow"><Sparkles /> {t("calmFitness")}</span>
+                <h1>{t("onboardingTitle0")}</h1>
+                <p className="step-intro">{t("onboardingCopy0")}</p>
                 <label className="field">
-                  <span>What should we call you?</span>
-                  <input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder="Your first name" maxLength={40} />
+                  <span>{t("callYou")}</span>
+                  <input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder={t("firstName")} maxLength={40} />
                 </label>
                 <div className="field-row">
                   <label className="field">
-                    <span>Age</span>
+                    <span>{t("age")}</span>
                     <input inputMode="numeric" value={age} onChange={(event) => setAge(event.target.value.replace(/\D/g, ""))} placeholder="30" />
                   </label>
                   <div className="field">
-                    <span>Units</span>
+                    <span>{t("units")}</span>
                     <div className="segmented compact">
                       <button className={units === "metric" ? "active" : ""} onClick={() => changeUnits("metric")}>kg / cm</button>
                       <button className={units === "imperial" ? "active" : ""} onClick={() => changeUnits("imperial")}>lb / in</button>
@@ -144,12 +147,12 @@ export default function Onboarding({
                   </div>
                 </div>
                 <div className="field">
-                  <span>How should we tailor the body map?</span>
+                  <span>{t("bodyMap")}</span>
                   <div className="choice-row gender-choice">
                     {([
-                      { value: "female", label: "Female" },
-                      { value: "male", label: "Male" },
-                      { value: null, label: "Prefer not to say" },
+                      { value: "female", label: t("female") },
+                      { value: "male", label: t("male") },
+                      { value: null, label: t("preferNot") },
                     ] as { value: Gender | null; label: string }[]).map((option) => (
                       <button key={option.label} className={gender === option.value ? "choice selected" : "choice"} onClick={() => setGender(option.value)}>
                         <UserRound />
@@ -158,16 +161,16 @@ export default function Onboarding({
                       </button>
                     ))}
                   </div>
-                  <small className="field-note">Used for illustrations and a calorie estimate—not a medical assessment.</small>
+                  <small className="field-note">{t("illustrationNote")}</small>
                 </div>
               </div>
             )}
 
             {step === 1 && (
               <div className="onboarding-step">
-                <span className="eyebrow"><Target /> YOUR DIRECTION</span>
-                <h1>What matters <em>most</em> right now?</h1>
-                <p className="step-intro">Pick the outcome you would be proud to keep. We will adjust the plan around it.</p>
+                <span className="eyebrow"><Target /> {t("direction")}</span>
+                <h1>{t("goalQuestion")}</h1>
+                <p className="step-intro">{t("goalCopy")}</p>
                 <div className="goal-grid">
                   {GOALS.map(({ value, title, copy, icon: Icon }) => (
                     <button key={value} className={goal === value ? "goal-card selected" : "goal-card"} onClick={() => setGoal(value)}>
@@ -178,7 +181,7 @@ export default function Onboarding({
                   ))}
                 </div>
                 <div className="field">
-                  <span>How active is a normal week?</span>
+                  <span>{t("activityQuestion")}</span>
                   <div className="activity-list">
                     {ACTIVITIES.map((option) => (
                       <button key={option.value} className={activity === option.value ? "activity-option selected" : "activity-option"} onClick={() => setActivity(option.value)}>
@@ -194,12 +197,12 @@ export default function Onboarding({
 
             {step === 2 && (
               <div className="onboarding-step">
-                <span className="eyebrow"><Dumbbell /> YOUR STARTING POINT</span>
-                <h1>Meet yourself <em>where you are.</em></h1>
-                <p className="step-intro">These numbers set your starting targets. They are estimates, not a diagnosis.</p>
+                <span className="eyebrow"><Dumbbell /> {t("startingPoint")}</span>
+                <h1>{t("startingTitle")}</h1>
+                <p className="step-intro">{t("startingCopy")}</p>
                 <div className="field-row">
                   <label className="field">
-                    <span>Height (cm)</span>
+                    <span>{t("height")}</span>
                     <input inputMode="decimal" value={height} onChange={(event) => setHeight(event.target.value.replace(/[^\d.]/g, ""))} placeholder="170" />
                   </label>
                   <label className="field">
@@ -208,19 +211,19 @@ export default function Onboarding({
                   </label>
                 </div>
                 <div className="field">
-                  <span>Training experience</span>
+                  <span>{t("trainingExperience")}</span>
                   <div className="segmented experience-segmented">
                     {([
-                      ["beginner", "New to this"],
-                      ["intermediate", "Some experience"],
-                      ["advanced", "Experienced"],
+                      ["beginner", t("newToThis")],
+                      ["intermediate", t("someExperience")],
+                      ["advanced", t("experienced")],
                     ] as [Experience, string][]).map(([value, label]) => (
                       <button key={value} className={experience === value ? "active" : ""} onClick={() => setExperience(value)}>{label}</button>
                     ))}
                   </div>
                 </div>
                 <div className="field">
-                  <span>What can you train with?</span>
+                  <span>{t("equipmentQuestion")}</span>
                   <div className="chip-grid">
                     {EQUIPMENT.map((value) => (
                       <button key={value} className={equipment.includes(value) ? "chip selected" : "chip"} onClick={() => toggleEquipment(value)}>
@@ -229,11 +232,11 @@ export default function Onboarding({
                       </button>
                     ))}
                   </div>
-                  <small className="field-note">Choose what you can access most weeks. Bodyweight is always included.</small>
+                  <small className="field-note">{t("equipmentCopy")}</small>
                 </div>
                 <div className="onboarding-privacy-note">
                   <ShieldCheck />
-                  <p><b>Private by default.</b> Your profile and logs stay on this device. Cloud sync and cloud AI are optional.</p>
+                  <p><b>{t("privateByDefault")}</b> {t("privateCopy")}</p>
                 </div>
               </div>
             )}
@@ -241,14 +244,14 @@ export default function Onboarding({
 
           <footer className="onboarding-footer">
             {step > 0 ? (
-              <button className="soft-btn" onClick={() => setStep(step - 1)}><ArrowLeft /> Back</button>
+              <button className="soft-btn" onClick={() => setStep(step - 1)}><ArrowLeft /> {t("back")}</button>
             ) : (
-              <span className="onboarding-footnote"><ActivityIcon /> Takes about 60 seconds</span>
+              <span className="onboarding-footnote"><ActivityIcon /> {t("about60")}</span>
             )}
             {step < 2 ? (
-              <button className="primary-btn" onClick={() => setStep(step + 1)}>Continue <ArrowRight /></button>
+              <button className="primary-btn" onClick={() => setStep(step + 1)}>{t("continue")} <ArrowRight /></button>
             ) : (
-              <button className="primary-btn" onClick={finish}>Build my plan <Check /></button>
+              <button className="primary-btn" onClick={finish}>{t("buildPlan")} <Check /></button>
             )}
           </footer>
         </section>
@@ -257,13 +260,13 @@ export default function Onboarding({
           {hero && <img src={hero.imageUrls[0]} alt="" aria-hidden="true" />}
           <div className="onboarding-visual-overlay" />
           <div className="onboarding-visual-copy">
-            <span className="eyebrow"><Sparkles /> DESIGNED FOR REAL LIFE</span>
-            <h2>Small steps.<br />Visible change.</h2>
-            <p>A realistic plan for food, movement, sleep, and the days when motivation is low.</p>
+            <span className="eyebrow"><Sparkles /> {t("designedLife")}</span>
+            <h2>{t("smallSteps")}</h2>
+            <p>{t("realisticPlan")}</p>
             <div className="onboarding-points">
-              <span><Check /> 876 exercises with real photos</span>
-              <span><Check /> 25 video demonstrations</span>
-              <span><Check /> Works without an account</span>
+              <span><Check /> {t("exercisesWithPhotos")}</span>
+              <span><Check /> {t("videoDemos")}</span>
+              <span><Check /> {t("worksOffline")}</span>
             </div>
           </div>
         </aside>

@@ -49,6 +49,7 @@ type StoreValue = {
   clearChat: () => void;
   resetAll: () => void;
   session: Session | null;
+  authReady: boolean;
   cloudStatus: CloudStatus;
   cloudError: string;
   cloudConfig: CloudConfig | null;
@@ -72,6 +73,7 @@ function ensureToday(data: AppData): AppData {
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AppData>(() => ensureToday(loadData()));
   const [session, setSession] = useState<Session | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const [cloudStatus, setCloudStatus] = useState<CloudStatus>("local");
   const [cloudError, setCloudError] = useState("");
   const [configVersion, setConfigVersion] = useState(0);
@@ -287,6 +289,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (!config) {
       setSession(null);
       setCloudStatus("local");
+      setAuthReady(true);
       return;
     }
     let cancelled = false;
@@ -294,12 +297,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     void currentSession().then((nextSession) => {
       if (cancelled) return;
       setSession(nextSession);
+      setAuthReady(true);
       if (nextSession) void hydrate(nextSession);
       else setCloudStatus("local");
     });
     const unsubscribe = subscribeToAuth((nextSession) => {
       if (cancelled) return;
       setSession(nextSession);
+      setAuthReady(true);
       if (nextSession) {
         void hydrate(nextSession);
       } else {
@@ -396,6 +401,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     clearChat,
     resetAll,
     session,
+    authReady,
     cloudStatus,
     cloudError,
     cloudConfig,
