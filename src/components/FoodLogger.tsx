@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Apple, Barcode, Camera, Check, LoaderCircle, Plus, Search, Sparkles, Utensils, X } from "lucide-react";
 import type { Meal } from "../types";
 import { FOODS, lookupBarcode, searchFoods, searchPackagedFoods, type ExternalFood, type Food } from "../data/foods";
+import { useLocale } from "../lib/locale";
 
 function mealForNow(): Meal["type"] {
   const hour = new Date().getHours();
@@ -12,6 +13,7 @@ function mealForNow(): Meal["type"] {
 }
 
 export default function FoodLogger({ onClose, onAdd, initialMeal }: { onClose: () => void; onAdd: (meal: Omit<Meal, "id">) => void; initialMeal?: Meal["type"] }) {
+  const { tr, t } = useLocale();
   const [tab, setTab] = useState<"search" | "quick" | "barcode" | "camera">("search");
   const [query, setQuery] = useState("");
   const [mealType, setMealType] = useState<Meal["type"]>(initialMeal || mealForNow);
@@ -89,7 +91,7 @@ export default function FoodLogger({ onClose, onAdd, initialMeal }: { onClose: (
     setBarcodeResult(null);
     const result = await lookupBarcode(barcode);
     setBarcodeBusy(false);
-    if (!result) setError("No packaged food found for that barcode. Try the product name in Search, or use Quick add.");
+    if (!result) setError(tr("No packaged food found for that barcode. Try the product name in Search, or use Quick add."));
     else setBarcodeResult(result);
   }
 
@@ -100,7 +102,7 @@ export default function FoodLogger({ onClose, onAdd, initialMeal }: { onClose: (
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } });
       streamRef.current = stream;
       if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play(); }
-    } catch { setScanning(false); alert('Camera access failed'); }
+    } catch { setScanning(false); alert(tr("Camera access failed")); }
   }
 
   function stopCamera() {
@@ -171,35 +173,35 @@ export default function FoodLogger({ onClose, onAdd, initialMeal }: { onClose: (
 
   return (
     <div className="modal-backdrop food-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <div className="food-modal" role="dialog" aria-modal="true" aria-label="Log food">
-        <button className="modal-close" onClick={onClose} aria-label="Close food logger"><X /></button>
+      <div className="food-modal" role="dialog" aria-modal="true" aria-label={t("logFood")}>
+        <button className="modal-close" onClick={onClose} aria-label={tr("Close food logger")}><X /></button>
         <div className="food-head">
           <span className="modal-mark"><Apple /></span>
           <div>
-            <span className="eyebrow">FOOD DIARY</span>
-            <h2>What did you eat?</h2>
-            <p>Estimates are fine. Consistency beats perfect numbers.</p>
+            <span className="eyebrow">{tr("FOOD DIARY")}</span>
+            <h2>{tr("What did you eat?")}</h2>
+            <p>{tr("Estimates are fine. Consistency beats perfect numbers.")}</p>
           </div>
         </div>
 
-        <div className="meal-type-row" role="group" aria-label="Meal type">
+        <div className="meal-type-row" role="group" aria-label={tr("Meal type")}>
           {(["Breakfast", "Lunch", "Snack", "Dinner"] as const).map((type) => (
-            <button key={type} className={mealType === type ? "active" : ""} onClick={() => setMealType(type)}>{type}</button>
+            <button key={type} className={mealType === type ? "active" : ""} onClick={() => setMealType(type)}>{tr(type)}</button>
           ))}
         </div>
 
         <div className="food-tabs" role="tablist">
-          <button role="tab" aria-selected={tab === "search"} className={tab === "search" ? "active" : ""} onClick={() => setTab("search")}><Search /> Search</button>
-          <button role="tab" aria-selected={tab === "quick"} className={tab === "quick" ? "active" : ""} onClick={() => setTab("quick")}><Plus /> Quick add</button>
-          <button role="tab" aria-selected={tab === "barcode"} className={tab === "barcode" ? "active" : ""} onClick={() => setTab("barcode")}><Barcode /> Barcode</button>
-          <button role="tab" aria-selected={tab === "camera"} className={tab === "camera" ? "active" : ""} onClick={() => setTab("camera")}><Camera /> AI Scan</button>
+          <button role="tab" aria-selected={tab === "search"} className={tab === "search" ? "active" : ""} onClick={() => setTab("search")}><Search /> {tr("Search")}</button>
+          <button role="tab" aria-selected={tab === "quick"} className={tab === "quick" ? "active" : ""} onClick={() => setTab("quick")}><Plus /> {tr("Quick add")}</button>
+          <button role="tab" aria-selected={tab === "barcode"} className={tab === "barcode" ? "active" : ""} onClick={() => setTab("barcode")}><Barcode /> {tr("Barcode")}</button>
+          <button role="tab" aria-selected={tab === "camera"} className={tab === "camera" ? "active" : ""} onClick={() => setTab("camera")}><Camera /> {tr("AI Scan")}</button>
         </div>
 
         {tab === "search" && (
           <div className="food-search">
             {selected ? (
               <div className="food-selected">
-                <button className="back-link" onClick={() => setSelected(null)}>← Back to results</button>
+                <button className="back-link" onClick={() => setSelected(null)}>← {tr("Back to results")}</button>
                 <div className="food-selected-card">
                   <div>
                     <small>{selected.serving}</small>
@@ -207,11 +209,11 @@ export default function FoodLogger({ onClose, onAdd, initialMeal }: { onClose: (
                     <p>{Math.round(selected.calories * servings)} kcal · {Math.round(selected.protein * servings)} g protein</p>
                   </div>
                   <label>
-                    Servings
+                    {tr("Servings")}
                     <span className="serving-stepper">
-                      <button onClick={() => setServings(Math.max(0.5, servings - 0.5))} aria-label="Fewer servings">−</button>
+                      <button onClick={() => setServings(Math.max(0.5, servings - 0.5))} aria-label={tr("Fewer servings")}>−</button>
                       <input type="number" min="0.25" max="10" step="0.25" value={servings} onChange={(event) => setServings(Math.max(0.25, Number(event.target.value) || 1))} />
-                      <button onClick={() => setServings(Math.min(10, servings + 0.5))} aria-label="More servings">+</button>
+                      <button onClick={() => setServings(Math.min(10, servings + 0.5))} aria-label={tr("More servings")}>+</button>
                     </span>
                   </label>
                 </div>
@@ -221,17 +223,17 @@ export default function FoodLogger({ onClose, onAdd, initialMeal }: { onClose: (
                   <span><b>{Math.round(selected.carbs * servings)}</b> g carbs</span>
                   <span><b>{Math.round(selected.fat * servings)}</b> g fat</span>
                 </div>
-                <button className="primary-btn wide" onClick={() => addFood(selected)}><Check /> Add {mealType.toLowerCase()}</button>
+                <button className="primary-btn wide" onClick={() => addFood(selected)}><Check /> {tr("Add")} {tr(mealType)}</button>
               </div>
             ) : (
               <>
                 <label className="search-input">
                   <Search />
-                  <input ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search roti, dal, eggs, oats, paneer…" aria-label="Search foods" />
-                  {query && <button onClick={() => setQuery("")} aria-label="Clear search"><X /></button>}
+                  <input ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={tr("Search roti, dal, eggs, oats, paneer…")} aria-label={tr("Search foods")} />
+                  {query && <button onClick={() => setQuery("")} aria-label={tr("Clear search")}><X /></button>}
                 </label>
                 <div className="food-results">
-                  <div className="result-heading"><span>Everyday foods</span><small>{local.length} results</small></div>
+                  <div className="result-heading"><span>{tr("Everyday foods")}</span><small>{local.length} {tr("results")}</small></div>
                   {local.map((food) => (
                     <button className="food-row" key={food.id} onClick={() => { setSelected(food); setServings(1); }}>
                       <span className="food-icon"><Utensils /></span>
@@ -240,27 +242,27 @@ export default function FoodLogger({ onClose, onAdd, initialMeal }: { onClose: (
                       <em>{food.protein}g P</em>
                     </button>
                   ))}
-                  {!local.length && <p className="empty-line">No everyday match. Try the packaged search below or Quick add.</p>}
+                  {!local.length && <p className="empty-line">{tr("No everyday match. Try the packaged search below or Quick add.")}</p>}
                 </div>
                 {query.trim().length >= 3 && (
                   <div className="food-results external">
                     <div className="result-heading">
-                      <span>Packaged foods <small>Open Food Facts</small></span>
+                      <span>{tr("Packaged foods")} <small>Open Food Facts</small></span>
                       {searching && <LoaderCircle className="spin" />}
                     </div>
                     {remote.map((food) => (
                       <button className="food-row" key={food.id} onClick={() => { setSelected(food); setServings(1); }}>
                         <span className="food-icon packaged"><Barcode /></span>
-                        <div><b>{food.name}</b><small>{food.serving} · {food.source === "open-food-facts" ? "Open Food Facts" : "Packaged"}</small></div>
+                        <div><b>{food.name}</b><small>{food.serving} · {tr(food.source === "open-food-facts" ? "Open Food Facts" : "Packaged")}</small></div>
                         <strong>{food.calories}<small>kcal</small></strong>
                         <em>{food.protein}g P</em>
                       </button>
                     ))}
-                    {!searching && !remote.length && <p className="empty-line">No packaged match found. You can still quick-add it.</p>}
+                    {!searching && !remote.length && <p className="empty-line">{tr("No packaged match found. You can still quick-add it.")}</p>}
                   </div>
                 )}
                 <div className="popular-chips">
-                  <span>Popular:</span>
+                  <span>{tr("Popular:")}</span>
                   {["roti", "dal", "eggs", "paneer", "oats", "banana"].map((id) => {
                     const food = FOODS.find((item) => item.id === id);
                     if (!food) return null;
@@ -291,33 +293,33 @@ export default function FoodLogger({ onClose, onAdd, initialMeal }: { onClose: (
               onClose();
             }}
           >
-            <label>Food name<input autoFocus value={custom.name} onChange={(event) => setCustom({ ...custom, name: event.target.value })} placeholder="e.g. Homemade vegetable soup" /></label>
+            <label>{tr("Food name")}<input autoFocus value={custom.name} onChange={(event) => setCustom({ ...custom, name: event.target.value })} placeholder={tr("e.g. Homemade vegetable soup")} /></label>
             <div className="form-grid">
-              <label>Calories<input type="number" min="0" value={custom.calories} onChange={(event) => setCustom({ ...custom, calories: event.target.value })} placeholder="250" /></label>
-              <label>Protein (g)<input type="number" min="0" step="0.1" value={custom.protein} onChange={(event) => setCustom({ ...custom, protein: event.target.value })} placeholder="12" /></label>
-              <label>Carbs (g)<input type="number" min="0" step="0.1" value={custom.carbs} onChange={(event) => setCustom({ ...custom, carbs: event.target.value })} placeholder="30" /></label>
-              <label>Fat (g)<input type="number" min="0" step="0.1" value={custom.fat} onChange={(event) => setCustom({ ...custom, fat: event.target.value })} placeholder="8" /></label>
+              <label>{tr("Calories")}<input type="number" min="0" value={custom.calories} onChange={(event) => setCustom({ ...custom, calories: event.target.value })} placeholder="250" /></label>
+              <label>{tr("Protein (g)")}<input type="number" min="0" step="0.1" value={custom.protein} onChange={(event) => setCustom({ ...custom, protein: event.target.value })} placeholder="12" /></label>
+              <label>{tr("Carbs (g)")}<input type="number" min="0" step="0.1" value={custom.carbs} onChange={(event) => setCustom({ ...custom, carbs: event.target.value })} placeholder="30" /></label>
+              <label>{tr("Fat (g)")}<input type="number" min="0" step="0.1" value={custom.fat} onChange={(event) => setCustom({ ...custom, fat: event.target.value })} placeholder="8" /></label>
             </div>
-            <button className="primary-btn wide" type="submit" disabled={!custom.name.trim()}><Plus /> Add {mealType.toLowerCase()}</button>
+            <button className="primary-btn wide" type="submit" disabled={!custom.name.trim()}><Plus /> {tr("Add")} {tr(mealType)}</button>
           </form>
         )}
 
         {tab === "camera" && (
           <div className="barcode-panel">
             <div className="barcode-icon"><Camera /></div>
-            <h3>Snap & Recognize Food</h3>
-            <p>AI powered by NVIDIA OCR/VLM - works with Indian & global foods</p>
+            <h3>{tr("Snap & Recognize Food")}</h3>
+            <p>{tr("AI powered by NVIDIA OCR/VLM - works with Indian & global foods")}</p>
             {!scanning && !scanResult && (
-              <button className="primary-btn" onClick={() => { setTab("camera"); startCamera(); }}><Camera /> Open Camera</button>
+              <button className="primary-btn" onClick={() => { setTab("camera"); startCamera(); }}><Camera /> {tr("Open Camera")}</button>
             )}
             {scanning && !scanResult && (
               <div style={{width:'100%',display:'grid',gap:'12px'}}>
                 <video ref={videoRef} autoPlay playsInline muted style={{width:'100%',borderRadius:'12px',background:'#000'}} />
                 <canvas ref={canvasRef} style={{display:'none'}} />
                 <button className="primary-btn" onClick={captureAndRecognize} disabled={searching}>
-                  {searching ? <><LoaderCircle className="spin" /> Recognizing...</> : <><Sparkles /> Capture & Recognize</>}
+                  {searching ? <><LoaderCircle className="spin" /> {tr("Recognizing...")}</> : <><Sparkles /> {tr("Capture & Recognize")}</>}
                 </button>
-                <button className="soft-btn" onClick={() => { stopCamera(); setScanning(false); }}>Cancel</button>
+                <button className="soft-btn" onClick={() => { stopCamera(); setScanning(false); }}>{tr("Cancel")}</button>
               </div>
             )}
             {scanResult && (
@@ -325,8 +327,8 @@ export default function FoodLogger({ onClose, onAdd, initialMeal }: { onClose: (
                 <h4>{scanResult.name}</h4>
                 <p>{scanResult.serving} · {scanResult.calories} kcal · P:{scanResult.protein}g C:{scanResult.carbs}g F:{scanResult.fat}g</p>
                 <div style={{display:'flex',gap:'8px'}}>
-                  <button className="primary-btn" onClick={addScanned}><Check /> Add to {mealType.toLowerCase()}</button>
-                  <button className="soft-btn" onClick={() => { setScanResult(null); startCamera(); }}>Scan Again</button>
+                  <button className="primary-btn" onClick={addScanned}><Check /> {tr("Add to")} {tr(mealType)}</button>
+                  <button className="soft-btn" onClick={() => { setScanResult(null); startCamera(); }}>{tr("Scan Again")}</button>
                 </div>
               </div>
             )}
@@ -336,19 +338,19 @@ export default function FoodLogger({ onClose, onAdd, initialMeal }: { onClose: (
         {tab === "camera" && (
           <div className="barcode-panel">
             <div className="barcode-icon"><Camera /></div>
-            <h3>Snap & Recognize Food</h3>
-            <p>AI powered by NVIDIA VLM - Indian & global foods, real-time</p>
+            <h3>{tr("Snap & Recognize Food")}</h3>
+            <p>{tr("AI powered by NVIDIA VLM - Indian & global foods, real-time")}</p>
             {!scanning && !scanResult && (
-              <button className="primary-btn" onClick={startCamera}><Camera /> Open Camera</button>
+              <button className="primary-btn" onClick={startCamera}><Camera /> {tr("Open Camera")}</button>
             )}
             {scanning && !scanResult && (
               <div style={{width:'100%',display:'grid',gap:'12px'}}>
                 <video ref={videoRef} autoPlay playsInline muted style={{width:'100%',borderRadius:'12px',background:'#000'}} />
                 <canvas ref={canvasRef} style={{display:'none'}} />
                 <button className="primary-btn" onClick={captureAndRecognize} disabled={searching}>
-                  {searching ? <><LoaderCircle className="spin" /> Recognizing...</> : <><Sparkles /> Capture & Recognize</>}
+                  {searching ? <><LoaderCircle className="spin" /> {tr("Recognizing...")}</> : <><Sparkles /> {tr("Capture & Recognize")}</>}
                 </button>
-                <button className="soft-btn" onClick={() => { stopCamera(); setScanning(false); }}>Cancel</button>
+                <button className="soft-btn" onClick={() => { stopCamera(); setScanning(false); }}>{tr("Cancel")}</button>
               </div>
             )}
             {scanResult && (
@@ -356,8 +358,8 @@ export default function FoodLogger({ onClose, onAdd, initialMeal }: { onClose: (
                 <h4>{scanResult.name}</h4>
                 <p>{scanResult.serving} · {scanResult.calories} kcal · P:{scanResult.protein}g C:{scanResult.carbs}g F:{scanResult.fat}g</p>
                 <div style={{display:'flex',gap:'8px'}}>
-                  <button className="primary-btn" onClick={addScanned}><Check /> Add to {mealType.toLowerCase()}</button>
-                  <button className="soft-btn" onClick={() => { setScanResult(null); startCamera(); }}>Scan Again</button>
+                  <button className="primary-btn" onClick={addScanned}><Check /> {tr("Add to")} {tr(mealType)}</button>
+                  <button className="soft-btn" onClick={() => { setScanResult(null); startCamera(); }}>{tr("Scan Again")}</button>
                 </div>
               </div>
             )}
@@ -367,12 +369,12 @@ export default function FoodLogger({ onClose, onAdd, initialMeal }: { onClose: (
         {tab === "barcode" && (
           <div className="barcode-panel">
             <div className="barcode-icon"><Barcode /></div>
-            <h3>Type a barcode</h3>
-            <p>Packaged-food data comes from Open Food Facts. Always check the label for allergens.</p>
+            <h3>{tr("Type a barcode")}</h3>
+            <p>{tr("Packaged-food data comes from Open Food Facts. Always check the label for allergens.")}</p>
             <div className="barcode-row">
               <input inputMode="numeric" value={barcode} onChange={(event) => setBarcode(event.target.value)} placeholder="e.g. 8901234567890" aria-label="Barcode number" />
               <button className="primary-btn" onClick={findBarcode} disabled={barcodeBusy || barcode.length < 6}>
-                {barcodeBusy ? <LoaderCircle className="spin" /> : <Search />} Look up
+                {barcodeBusy ? <LoaderCircle className="spin" /> : <Search />} {tr("Look up")}
               </button>
             </div>
             {error && <p className="form-error">{error}</p>}
@@ -380,13 +382,13 @@ export default function FoodLogger({ onClose, onAdd, initialMeal }: { onClose: (
               <div className="barcode-result">
                 <h4>{barcodeResult.name}</h4>
                 <p>{barcodeResult.serving} · {barcodeResult.calories} kcal · {barcodeResult.protein} g protein</p>
-                <button className="primary-btn" onClick={() => addFood(barcodeResult)}><Check /> Add {mealType.toLowerCase()}</button>
+                <button className="primary-btn" onClick={() => addFood(barcodeResult)}><Check /> {tr("Add")} {tr(mealType)}</button>
               </div>
             )}
           </div>
         )}
 
-        <small className="food-disclaimer">Nutrition values are estimates. This is not medical or allergen advice.</small>
+        <small className="food-disclaimer">{tr("Nutrition values are estimates. This is not medical or allergen advice.")}</small>
       </div>
     </div>
   );

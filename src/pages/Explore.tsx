@@ -94,7 +94,7 @@ export default function Explore({
         <div className="explore-copy">
           <span className="eyebrow"><Sparkles /> {tr("THE MOVEMENT LIBRARY")}</span>
           <h1>{tr("Find a movement")}<br /><em>{tr("that fits your day.")}</em></h1>
-          <p>{library.length} exercises with clear photos, simple instructions, and equipment filters. Start with a video demo or tap a body area.</p>
+          <p>{library.length} {tr("exercises with clear photos, simple instructions, and equipment filters. Start with a video demo or tap a body area.")}</p>
           <label className="explore-search">
             <Search />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={tr("Search exercise or muscle")} aria-label={tr("Search exercises")} />
@@ -102,7 +102,7 @@ export default function Explore({
           </label>
           <div className="explore-meta">
             <span><b>{filtered.length}</b> {tr("matching exercises")}</span>
-            <span><b>{FLAGSHIP_IDS.length}</b> video demos</span>
+            <span><b>{FLAGSHIP_IDS.length}</b> {tr("video demos")}</span>
             <span><b>{library.filter((exercise) => exercise.trackedId).length}</b> {tr("camera-guided")}</span>
           </div>
         </div>

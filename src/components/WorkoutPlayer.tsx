@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { ExerciseResult, WorkoutItem, WorkoutLog } from "../types";
 import { useStore } from "../lib/store";
+import { useLocale } from "../lib/locale";
 import { getExercise, regionLabel, trackedExerciseFor } from "../lib/library";
 
 function formatClock(seconds: number) {
@@ -32,6 +33,7 @@ export default function WorkoutPlayer({
   onTrain: (id: string) => void;
   onFinish: (log: WorkoutLog) => void;
 }) {
+  const { tr } = useLocale();
   const { data } = useStore();
   const restDefault = data.settings.restSeconds || 75;
   const [index, setIndex] = useState(0);
@@ -75,8 +77,8 @@ export default function WorkoutPlayer({
       <div className="workout-player-overlay">
         <div className="player-empty">
           <Dumbbell />
-          <h2>No exercises in this session.</h2>
-          <button className="primary-btn" onClick={onClose}>Close</button>
+          <h2>{tr("No exercises in this session.")}</h2>
+          <button className="primary-btn" onClick={onClose}>{tr("Close")}</button>
         </div>
       </div>
     );
@@ -148,10 +150,10 @@ export default function WorkoutPlayer({
   return (
     <div className="workout-player-overlay">
       <div className="player-top">
-        <span className="player-brand"><span><Flame /></span> SESSION IN PROGRESS</span>
+        <span className="player-brand"><span><Flame /></span> {tr("SESSION IN PROGRESS")}</span>
         <div className="player-top-right">
           <span><Clock3 /> {formatClock(elapsed)}</span>
-          <button className="player-close" onClick={onClose} aria-label="Exit workout"><X /></button>
+          <button className="player-close" onClick={onClose} aria-label={tr("Exit workout")}><X /></button>
         </div>
       </div>
       <div className="player-progress"><i style={{ width: `${overallProgress}%` }} /></div>
@@ -160,53 +162,53 @@ export default function WorkoutPlayer({
         <div className="player-media">
           <img src={current.imageUrls[0]} alt={`${current.name} demonstration`} />
           <div className="player-media-gradient" />
-          <span className="player-exercise-count">EXERCISE {index + 1} OF {items.length}</span>
+          <span className="player-exercise-count">{tr("EXERCISE")} {index + 1} {tr("OF")} {items.length}</span>
           <div className="player-media-caption">
             <span>{regionLabel(current.region)} · {current.equipment}</span>
             <b>{current.name}</b>
-            <small>{currentItem.sets} sets · {isHold ? "timed hold" : "controlled reps"}</small>
+            <small>{currentItem.sets} {tr("sets")} · {tr(isHold ? "timed hold" : "controlled reps")}</small>
           </div>
         </div>
 
         <div className="player-work">
           {rest > 0 ? (
             <div className="rest-panel" aria-live="polite">
-              <span className="eyebrow">REST & RESET</span>
+              <span className="eyebrow">{tr("REST & RESET")}</span>
               <strong>{rest}</strong>
-              <p>Seconds. Breathe. Loosen your grip.</p>
+              <p>{tr("Seconds. Breathe. Loosen your grip.")}</p>
               <div className="rest-actions">
-                <button className="soft-btn" onClick={() => setPaused(!paused)}>{paused ? <Play /> : <Pause />}{paused ? "Resume" : "Pause"}</button>
-                <button className="text-btn" onClick={() => setRest(0)}><SkipForward /> Skip rest</button>
+                <button className="soft-btn" onClick={() => setPaused(!paused)}>{paused ? <Play /> : <Pause />}{tr(paused ? "Resume" : "Pause")}</button>
+                <button className="text-btn" onClick={() => setRest(0)}><SkipForward /> {tr("Skip rest")}</button>
               </div>
             </div>
           ) : (
             <div className="set-panel" aria-live="polite">
               <div className="set-counter">
-                <span><small>SET</small><b>{setNumber}<i>/{currentItem.sets}</i></b></span>
-                <span><small>{isHold ? "HOLD" : "TARGET"}</small><b>{currentItem.target}<i>{isHold ? "s" : ""}</i></b></span>
+                <span><small>{tr("SET")}</small><b>{setNumber}<i>/{currentItem.sets}</i></b></span>
+                <span><small>{tr(isHold ? "HOLD" : "TARGET")}</small><b>{currentItem.target}<i>{isHold ? "s" : ""}</i></b></span>
               </div>
               <div className="set-dots" aria-label={`${setNumber} of ${currentItem.sets} sets`}>
                 {Array.from({ length: currentItem.sets }, (_, dot) => <i key={dot} className={dot < setNumber - 1 ? "done" : dot === setNumber - 1 ? "current" : ""} />)}
               </div>
               <div className="player-actions">
-                <button className="primary-btn complete-set-btn" onClick={completeSet}><Check /> {isHold ? "Hold complete" : "Set complete"}</button>
+                <button className="primary-btn complete-set-btn" onClick={completeSet}><Check /> {tr(isHold ? "Hold complete" : "Set complete")}</button>
                 <div className="player-secondary-actions">
-                  {tracked && <button className="soft-btn" onClick={() => onTrain(current.id)}><Camera /> Camera form coach</button>}
-                  <button className="soft-btn" onClick={nextExercise}><SkipForward /> Skip exercise</button>
+                  {tracked && <button className="soft-btn" onClick={() => onTrain(current.id)}><Camera /> {tr("Camera form coach")}</button>}
+                  <button className="soft-btn" onClick={nextExercise}><SkipForward /> {tr("Skip exercise")}</button>
                 </div>
               </div>
             </div>
           )}
 
           <div className="player-next">
-            <span className="eyebrow">UP NEXT</span>
+            <span className="eyebrow">{tr("UP NEXT")}</span>
             <div>
               <span className="next-thumb"><img src={current.imageUrls[0]} alt="" /></span>
-              <div><b>{current.name}</b><small>{completedSets} of {totalSets} sets completed</small></div>
+              <div><b>{current.name}</b><small>{completedSets} {tr("of")} {totalSets} {tr("sets completed")}</small></div>
               <ChevronRight />
             </div>
           </div>
-          <button className="player-finish-link" onClick={() => setShowFinish(true)}>Finish workout early</button>
+          <button className="player-finish-link" onClick={() => setShowFinish(true)}>{tr("Finish workout early")}</button>
         </div>
       </div>
 
@@ -214,11 +216,11 @@ export default function WorkoutPlayer({
         <div className="player-confirm">
           <div>
             <TimerReset />
-            <h3>Finish this session?</h3>
-            <p>We will save the sets you have completed so far. You can pick up the rest later.</p>
+            <h3>{tr("Finish this session?")}</h3>
+            <p>{tr("We will save the sets you have completed so far. You can pick up the rest later.")}</p>
             <div>
-              <button className="soft-btn" onClick={() => setShowFinish(false)}>Keep training</button>
-              <button className="primary-btn" onClick={() => finish()}>Save and finish</button>
+              <button className="soft-btn" onClick={() => setShowFinish(false)}>{tr("Keep training")}</button>
+              <button className="primary-btn" onClick={() => finish()}>{tr("Save and finish")}</button>
             </div>
           </div>
         </div>

@@ -16,6 +16,7 @@ import {
   Utensils,
 } from "lucide-react";
 import { useStore } from "../lib/store";
+import { useLocale } from "../lib/locale";
 import {
   calorieStreak,
   dateKey,
@@ -29,6 +30,7 @@ import { BarChart, ChartEmpty, LineChart, Ring, StatCard } from "../components/C
 
 export default function Progress({ onLogWeight }: { onLogWeight: () => void }) {
   const { data, targets } = useStore();
+  const { tr } = useLocale();
   const [range, setRange] = useState<7 | 30>(7);
   const unit = data.profile.units;
   const today = dateKey();
@@ -80,43 +82,43 @@ export default function Progress({ onLogWeight }: { onLogWeight: () => void }) {
   }).length;
   const hasAnyData = loggedDayCount > 0;
 
-  const rangeLabel = range === 7 ? "Last 7 days" : "Last 30 days";
+  const rangeLabel = range === 7 ? tr("Last 7 days") : tr("Last 30 days");
 
   return (
     <div className="page progress-page-v2">
       <section className="progress-head">
         <div>
-          <span className="eyebrow"><TrendingUp /> THE LONG VIEW</span>
-          <h1>Small signals.<br /><em>Real direction.</em></h1>
-          <p>Look for the trend, not the single day. Weight, food, movement, and sleep all tell part of the story.</p>
+          <span className="eyebrow"><TrendingUp /> {tr("THE LONG VIEW")}</span>
+          <h1>{tr("Small signals.")}<br /><em>{tr("Real direction.")}</em></h1>
+          <p>{tr("Look for the trend, not the single day. Weight, food, movement, and sleep all tell part of the story.")}</p>
         </div>
         <div className="progress-head-actions">
           <div className="segmented">
-            <button className={range === 7 ? "active" : ""} onClick={() => setRange(7)}>7 days</button>
-            <button className={range === 30 ? "active" : ""} onClick={() => setRange(30)}>30 days</button>
+            <button className={range === 7 ? "active" : ""} onClick={() => setRange(7)}>{tr("7 days")}</button>
+            <button className={range === 30 ? "active" : ""} onClick={() => setRange(30)}>{tr("30 days")}</button>
           </div>
-          <button className="primary-btn" onClick={onLogWeight}><Scale /> Log weight</button>
+          <button className="primary-btn" onClick={onLogWeight}><Scale /> {tr("Log weight")}</button>
         </div>
       </section>
 
       {!hasAnyData ? (
         <section className="panel progress-empty">
-          <ChartEmpty>Your trend will appear after you log a meal, weight, steps, water, or sleep.</ChartEmpty>
-          <button className="primary-btn" onClick={onLogWeight}><Plus /> Add your first check-in</button>
+          <ChartEmpty>{tr("Your trend will appear after you log a meal, weight, steps, water, or sleep.")}</ChartEmpty>
+          <button className="primary-btn" onClick={onLogWeight}><Plus /> {tr("Add your first check-in")}</button>
         </section>
       ) : (
         <>
           <section className="progress-stats-v2">
-            <StatCard icon={<Scale />} label="Current weight" value={latestWeight ? displayWeight(latestWeight, unit) : "—"} detail={weightPoints.length >= 2 ? `${weightChange > 0 ? "+" : ""}${unit === "imperial" ? Math.round(weightChange * 2.20462) : weightChange.toFixed(1)} ${unit === "imperial" ? "lb" : "kg"} across ${rangeLabel.toLowerCase()}` : "Log again to see a trend"} tone="green" />
-            <StatCard icon={<Flame />} label="Average intake" value={avgCalories ? `${avgCalories.toLocaleString()} kcal` : "—"} detail={`${onTargetDays} of ${loggedNutritionDays.length} logged days near target`} tone="amber" />
-            <StatCard icon={<Dumbbell />} label="Workouts" value={String(workoutsInRange.length)} detail={`${sessionsInRange.length} camera sessions · ${volume ? `${Math.round(volume).toLocaleString()} kg volume` : "bodyweight or unloaded"}`} tone="blue" />
-            <StatCard icon={<Target />} label="Calorie streak" value={`${streak} day${streak === 1 ? "" : "s"}`} detail={`${loggedDayCount} of ${range} days with a check-in`} tone="rose" />
+            <StatCard icon={<Scale />} label={tr("Current weight")} value={latestWeight ? displayWeight(latestWeight, unit) : "—"} detail={weightPoints.length >= 2 ? `${weightChange > 0 ? "+" : ""}${unit === "imperial" ? Math.round(weightChange * 2.20462) : weightChange.toFixed(1)} ${unit === "imperial" ? "lb" : "kg"} · ${rangeLabel.toLowerCase()}` : tr("Log again to see a trend")} tone="green" />
+            <StatCard icon={<Flame />} label={tr("Average intake")} value={avgCalories ? `${avgCalories.toLocaleString()} kcal` : "—"} detail={`${onTargetDays} / ${loggedNutritionDays.length} ${tr("logged days near target")}`} tone="amber" />
+            <StatCard icon={<Dumbbell />} label={tr("Workouts")} value={String(workoutsInRange.length)} detail={`${sessionsInRange.length} ${tr("camera sessions")} · ${volume ? `${Math.round(volume).toLocaleString()} kg ${tr("volume")}` : tr("bodyweight or unloaded")}`} tone="blue" />
+            <StatCard icon={<Target />} label={tr("Calorie streak")} value={`${streak} ${tr(streak === 1 ? "day" : "days")}`} detail={`${loggedDayCount} / ${range} ${tr("days with a check-in")}`} tone="rose" />
           </section>
 
           <div className="progress-chart-grid">
             <article className="panel chart-panel wide">
               <header className="panel-head">
-                <div><span className="eyebrow">ENERGY</span><h2>Calories logged</h2></div>
+                <div><span className="eyebrow">{tr("ENERGY")}</span><h2>{tr("Calories logged")}</h2></div>
                 <span className="chart-caption">{rangeLabel} · target {targets.calories.toLocaleString()} kcal</span>
               </header>
               {range === 7 ? (
@@ -124,54 +126,54 @@ export default function Progress({ onLogWeight }: { onLogWeight: () => void }) {
               ) : (
                 <LineChart data={caloriePoints} color="#6f9638" suffix=" kcal" />
               )}
-              <div className="chart-foot"><span>Protein average <b>{avgProtein || "—"} g</b></span><span>Target <b>{targets.protein} g</b></span><span>Logged days <b>{loggedNutritionDays.length}</b></span></div>
+              <div className="chart-foot"><span>{tr("Protein average")} <b>{avgProtein || "—"} g</b></span><span>{tr("Target")} <b>{targets.protein} g</b></span><span>{tr("Logged days")} <b>{loggedNutritionDays.length}</b></span></div>
             </article>
 
             <article className="panel chart-panel">
               <header className="panel-head">
-                <div><span className="eyebrow">WEIGHT TREND</span><h2>Body weight</h2></div>
+                <div><span className="eyebrow">{tr("WEIGHT TREND")}</span><h2>{tr("Body weight")}</h2></div>
                 <Scale />
               </header>
               {weightPoints.length >= 2 ? (
                 <LineChart data={weightPoints} color="#668fb0" suffix={unit === "imperial" ? " lb" : " kg"} />
               ) : (
-                <ChartEmpty>Log weight on two or more days to see the direction.</ChartEmpty>
+                <ChartEmpty>{tr("Log weight on two or more days to see the direction.")}</ChartEmpty>
               )}
-              <div className="chart-foot"><span>Healthy range <b>{targets.healthyWeight ? `${displayWeight(targets.healthyWeight[0], unit)}–${displayWeight(targets.healthyWeight[1], unit)}` : "add height"}</b></span></div>
+              <div className="chart-foot"><span>{tr("Healthy range")} <b>{targets.healthyWeight ? `${displayWeight(targets.healthyWeight[0], unit)}–${displayWeight(targets.healthyWeight[1], unit)}` : tr("add height")}</b></span></div>
             </article>
 
             <article className="panel chart-panel">
               <header className="panel-head">
-                <div><span className="eyebrow">DAILY MOVEMENT</span><h2>Steps</h2></div>
+                <div><span className="eyebrow">{tr("DAILY MOVEMENT")}</span><h2>{tr("Steps")}</h2></div>
                 <Footprints />
               </header>
               {stepPoints.some((point) => point.value > 0) ? (
                 range === 7 ? <BarChart data={stepPoints} color="#c7913f" suffix=" steps" /> : <LineChart data={stepPoints} color="#c7913f" suffix=" steps" />
               ) : (
-                <ChartEmpty>Log steps from your phone or watch to see this trend.</ChartEmpty>
+                <ChartEmpty>{tr("Log steps from your phone or watch to see this trend.")}</ChartEmpty>
               )}
-              <div className="chart-foot"><span>Target <b>{targets.steps.toLocaleString()} / day</b></span><span>Average <b>{stepPoints.length ? Math.round(stepPoints.reduce((sum, point) => sum + point.value, 0) / stepPoints.length).toLocaleString() : "—"}</b></span></div>
+              <div className="chart-foot"><span>{tr("Target")} <b>{targets.steps.toLocaleString()} / {tr("day")}</b></span><span>{tr("Average")} <b>{stepPoints.length ? Math.round(stepPoints.reduce((sum, point) => sum + point.value, 0) / stepPoints.length).toLocaleString() : "—"}</b></span></div>
             </article>
 
             <article className="panel chart-panel">
               <header className="panel-head">
-                <div><span className="eyebrow">RECOVERY</span><h2>Sleep</h2></div>
+                <div><span className="eyebrow">{tr("RECOVERY")}</span><h2>{tr("Sleep")}</h2></div>
                 <Moon />
               </header>
               {sleepPoints.some((point) => point.value > 0) ? (
                 <BarChart data={sleepPoints} color="#8573aa" suffix=" h" />
               ) : (
-                <ChartEmpty>Add last night&apos;s sleep to connect recovery to training.</ChartEmpty>
+                <ChartEmpty>{tr("Add last night’s sleep to connect recovery to training.")}</ChartEmpty>
               )}
-              <div className="chart-foot"><span>Target <b>{targets.sleep} h</b></span><span>Average <b>{sleepPoints.length ? (sleepPoints.reduce((sum, point) => sum + point.value, 0) / sleepPoints.length).toFixed(1) : "—"} h</b></span></div>
+              <div className="chart-foot"><span>{tr("Target")} <b>{targets.sleep} h</b></span><span>{tr("Average")} <b>{sleepPoints.length ? (sleepPoints.reduce((sum, point) => sum + point.value, 0) / sleepPoints.length).toFixed(1) : "—"} h</b></span></div>
             </article>
           </div>
 
           <div className="progress-lower-grid">
             <article className="panel consistency-panel">
               <header className="panel-head">
-                <div><span className="eyebrow">CONSISTENCY</span><h2>Showing up</h2></div>
-                <Ring value={loggedDayCount} max={range} label="Check-in days" detail={`/ ${range}`} size={94} color="#6f9638" />
+                <div><span className="eyebrow">{tr("CONSISTENCY")}</span><h2>{tr("Showing up")}</h2></div>
+                <Ring value={loggedDayCount} max={range} label={tr("Check-in days")} detail={`/ ${range}`} size={94} color="#6f9638" />
               </header>
               <div className="consistency-heatmap" aria-label={`${loggedDayCount} of ${range} days with a check-in`}>
                 {dayData.map((entry) => {
@@ -179,13 +181,13 @@ export default function Progress({ onLogWeight }: { onLogWeight: () => void }) {
                   return <span key={entry.key} title={`${entry.key}: ${entry.totals.calories} kcal`} data-level={intensity > 0.8 ? "high" : intensity > 0.4 ? "medium" : intensity > 0 ? "low" : "none"} />;
                 })}
               </div>
-              <p>A check-in is enough. The goal is a usable record, not a flawless streak.</p>
-              <div className="consistency-legend"><span><i className="none" /> no entry</span><span><i className="low" /> partial</span><span><i className="high" /> logged</span></div>
+              <p>{tr("A check-in is enough. The goal is a usable record, not a flawless streak.")}</p>
+              <div className="consistency-legend"><span><i className="none" /> {tr("no entry")}</span><span><i className="low" /> {tr("partial")}</span><span><i className="high" /> {tr("logged")}</span></div>
             </article>
 
             <article className="panel activity-history-panel">
               <header className="panel-head">
-                <div><span className="eyebrow">RECENT ACTIVITY</span><h2>Sessions</h2></div>
+                <div><span className="eyebrow">{tr("RECENT ACTIVITY")}</span><h2>{tr("Sessions")}</h2></div>
                 <span className="history-count">{workoutsInRange.length + sessionsInRange.length} in range</span>
               </header>
               {workoutsInRange.length || sessionsInRange.length ? (
@@ -201,19 +203,19 @@ export default function Progress({ onLogWeight }: { onLogWeight: () => void }) {
                     <div key={`session-${session.id}`} className="progress-activity-row">
                       <span><Camera /></span>
                       <div><b>{session.name}</b><small>{formatShortDate(session.date.slice(0, 10))} · {session.reps.length ? `${session.reps.length} reps` : `${Math.round(session.hold)}s hold`} · score {session.score ?? "—"}</small></div>
-                      <strong>camera</strong>
+                      <strong>{tr("camera")}</strong>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="mini-empty"><Activity /><p>Your completed workouts and camera sessions will show up here.</p></div>
+                <div className="mini-empty"><Activity /><p>{tr("Your completed workouts and camera sessions will show up here.")}</p></div>
               )}
             </article>
           </div>
 
           <section className="progress-insight">
-            <div><Utensils /><span><b>One useful pattern</b> <p>{avgProtein && avgProtein < targets.protein * 0.8 ? `Your average protein is ${avgProtein} g. Adding a protein source to breakfast is often the easiest fix.` : avgCalories && avgCalories > targets.calories * 1.15 ? "Your logged intake is above target. Check portions, drinks, and cooking oils before cutting meals." : "Your check-ins are building a useful pattern. Keep the next action small and repeatable."}</p></span></div>
-            <button className="text-btn" onClick={onLogWeight}>Add today <ArrowRight /></button>
+            <div><Utensils /><span><b>{tr("One useful pattern")}</b> <p>{tr(avgProtein && avgProtein < targets.protein * 0.8 ? "Your average protein is below your target. Add a protein source to breakfast." : avgCalories && avgCalories > targets.calories * 1.15 ? "Your logged intake is above target. Check portions, drinks, and cooking oils before cutting meals." : "Your check-ins are building a useful pattern. Keep the next action small and repeatable.")}</p></span></div>
+            <button className="text-btn" onClick={onLogWeight}>{tr("Add today")} <ArrowRight /></button>
           </section>
         </>
       )}

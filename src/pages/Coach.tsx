@@ -15,6 +15,7 @@ import {
   Volume2,
 } from "lucide-react";
 import { useStore } from "../lib/store";
+import { useLocale } from "../lib/locale";
 import { buildCoachContext, askCoach, coachOpener, type CoachSource } from "../lib/coach";
 import { mealTotals } from "../lib/profile";
 import type { ChatMessage } from "../types";
@@ -29,6 +30,7 @@ const PROMPTS = [
 
 export default function Coach({ onNavigate }: { onNavigate: (section: "Workout" | "Explore" | "Today" | "Progress") => void }) {
   const { data, targets, addChat, clearChat, update } = useStore();
+  const { tr } = useLocale();
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [lastSource, setLastSource] = useState<CoachSource | null>(null);
@@ -66,7 +68,7 @@ export default function Coach({ onNavigate }: { onNavigate: (section: "Workout" 
       setLastSource(reply.source);
       if (reply.source === "local") setError("");
     } catch {
-      setError("The coach could not answer right now. Your local trackers are still working.");
+      setError(tr("The coach could not answer right now. Your local trackers are still working."));
     } finally {
       setBusy(false);
     }
@@ -91,42 +93,42 @@ export default function Coach({ onNavigate }: { onNavigate: (section: "Workout" 
     <div className="page coach-page-v2">
       <section className="coach-head-v2">
         <div>
-          <span className="eyebrow"><Sparkles /> YOUR PRIVATE COACH</span>
-          <h1>A clearer next step,<br /><em>without the noise.</em></h1>
-          <p>Ground your questions in today&apos;s food, movement, and recovery. The coach gives general wellness guidance—not diagnosis.</p>
+          <span className="eyebrow"><Sparkles /> {tr("YOUR PRIVATE COACH")}</span>
+          <h1>{tr("A clearer next step,")}<br /><em>{tr("without the noise.")}</em></h1>
+          <p>{tr("Ground your questions in today’s food, movement, and recovery. The coach gives general wellness guidance—not diagnosis.")}</p>
         </div>
         <div className="coach-status-card">
           <span className={consent ? "status-orb on" : "status-orb"}>{consent ? <Cloud /> : <CloudOff />}</span>
-          <div><b>{consent ? "Cloud AI enabled" : "On-device guidance"}</b><small>{consent ? "Messages and your compact day summary are sent to the AI endpoint." : "Replies use your logs locally. No message leaves the device."}</small></div>
-          <button className={consent ? "soft-btn" : "primary-btn"} onClick={toggleConsent}>{consent ? "Use local" : "Enable cloud"}</button>
+          <div><b>{tr(consent ? "Cloud AI enabled" : "On-device guidance")}</b><small>{tr(consent ? "Messages and your compact day summary are sent to the AI endpoint." : "Replies use your logs locally. No message leaves the device.")}</small></div>
+          <button className={consent ? "soft-btn" : "primary-btn"} onClick={toggleConsent}>{tr(consent ? "Use local" : "Enable cloud")}</button>
         </div>
       </section>
 
       <div className="coach-layout-v2">
         <aside className="coach-context-v2">
           <article className="panel">
-            <span className="eyebrow">WHAT THE COACH SEES</span>
-            <h2>Today&apos;s context</h2>
+            <span className="eyebrow">{tr("WHAT THE COACH SEES")}</span>
+            <h2>{tr("Today's context")}</h2>
             <div className="context-list">
-              <span><Flame /><div><b>{Math.max(0, targets.calories - Math.round(totals.calories)).toLocaleString()} kcal</b><small>remaining today</small></div></span>
-              <span><Dumbbell /><div><b>{Math.max(0, targets.protein - Math.round(totals.protein))} g</b><small>protein remaining</small></div></span>
-              <span><Brain /><div><b>{data.day.sleep || "—"} h</b><small>sleep logged</small></div></span>
-              <span><Sparkles /><div><b>{data.workout.length} exercises</b><small>in your plan</small></div></span>
+              <span><Flame /><div><b>{Math.max(0, targets.calories - Math.round(totals.calories)).toLocaleString()} kcal</b><small>{tr("remaining today")}</small></div></span>
+              <span><Dumbbell /><div><b>{Math.max(0, targets.protein - Math.round(totals.protein))} g</b><small>{tr("protein remaining")}</small></div></span>
+              <span><Brain /><div><b>{data.day.sleep || "—"} h</b><small>{tr("sleep logged")}</small></div></span>
+              <span><Sparkles /><div><b>{data.workout.length} {tr("exercises")}</b><small>{tr("in your plan")}</small></div></span>
             </div>
-            <div className="context-privacy"><LockKeyhole /><p>No camera frames, microphone audio, or browsing data are shared.</p></div>
+            <div className="context-privacy"><LockKeyhole /><p>{tr("No camera frames, microphone audio, or browsing data are shared.")}</p></div>
           </article>
 
           <article className="panel coach-quick-card">
-            <span className="eyebrow">SHORTCUTS</span>
-            <h3>Jump to a tool</h3>
-            <button onClick={() => onNavigate("Workout")}><Dumbbell /> Open my plan <ArrowRight /></button>
-            <button onClick={() => onNavigate("Explore")}><Sparkles /> Find an exercise <ArrowRight /></button>
-            <button onClick={() => onNavigate("Progress")}><Flame /> See my progress <ArrowRight /></button>
+            <span className="eyebrow">{tr("SHORTCUTS")}</span>
+            <h3>{tr("Jump to a tool")}</h3>
+            <button onClick={() => onNavigate("Workout")}><Dumbbell /> {tr("Open my plan")} <ArrowRight /></button>
+            <button onClick={() => onNavigate("Explore")}><Sparkles /> {tr("Find an exercise")} <ArrowRight /></button>
+            <button onClick={() => onNavigate("Progress")}><Flame /> {tr("See my progress")} <ArrowRight /></button>
           </article>
 
           <article className="panel coach-safety-card">
-            <span className="eyebrow">WHEN TO GET A PERSON</span>
-            <p>For chest pain, breathing trouble, fainting, severe pain, pregnancy concerns, or an eating disorder, contact a qualified professional or local emergency service. In India, Tele-MANAS is <b>14416</b>.</p>
+            <span className="eyebrow">{tr("WHEN TO GET A PERSON")}</span>
+            <p>{tr("For chest pain, breathing trouble, fainting, severe pain, pregnancy concerns, or an eating disorder, contact a qualified professional or local emergency service. In India, Tele-MANAS is")} <b>14416</b>.</p>
           </article>
         </aside>
 
@@ -134,14 +136,14 @@ export default function Coach({ onNavigate }: { onNavigate: (section: "Workout" 
           <header className="chat-header-v2">
             <div className="chat-avatar"><Bot /></div>
             <div>
-              <h2>Chinnu Coach</h2>
-              <p><i className={busy ? "online" : ""} /> {busy ? "Thinking with your context…" : lastSource === "cloud" ? "Cloud reply · general guidance" : "Ready · private by default"}</p>
+              <h2>{tr("Chinnu Coach")}</h2>
+              <p><i className={busy ? "online" : ""} /> {tr(busy ? "Thinking with your context…" : lastSource === "cloud" ? "Cloud reply · general guidance" : "Ready · private by default")}</p>
             </div>
-            {data.chat.length > 0 && <button className="icon-btn" onClick={() => { clearChat(); setLastSource(null); }} title="Clear chat" aria-label="Clear chat"><Trash2 /></button>}
+            {data.chat.length > 0 && <button className="icon-btn" onClick={() => { clearChat(); setLastSource(null); }} title={tr("Clear chat")} aria-label={tr("Clear chat")}><Trash2 /></button>}
           </header>
 
           <div className="prompt-row-v2">
-            {PROMPTS.map((prompt) => <button key={prompt} onClick={() => void submit(prompt)} disabled={busy}>{prompt}</button>)}
+            {PROMPTS.map((prompt) => <button key={prompt} onClick={() => void submit(tr(prompt))} disabled={busy}>{tr(prompt)}</button>)}
           </div>
 
           <div className="chat-messages-v2" aria-live="polite">
@@ -151,7 +153,7 @@ export default function Coach({ onNavigate }: { onNavigate: (section: "Workout" 
                 <div>
                   <p>{message.text}</p>
                   {message.from === "ai" && message.id !== -1 && (
-                    <button className="message-speak" onClick={() => speak(message.text)} aria-label="Read reply aloud"><Volume2 /> Read aloud</button>
+                    <button className="message-speak" onClick={() => speak(message.text)} aria-label={tr("Read reply aloud")}><Volume2 /> {tr("Read aloud")}</button>
                   )}
                 </div>
               </div>
@@ -165,8 +167,8 @@ export default function Coach({ onNavigate }: { onNavigate: (section: "Workout" 
           {!consent && (
             <div className="local-mode-note">
               <CloudOff />
-              <p><b>Local mode.</b> Replies are built on-device from your logs. Enable cloud AI for a more conversational answer.</p>
-              <button onClick={toggleConsent}>Enable</button>
+              <p><b>{tr("Local mode.")}</b> {tr("Replies are built on-device from your logs. Enable cloud AI for a more conversational answer.")}</p>
+              <button onClick={toggleConsent}>{tr("Enable")}</button>
             </div>
           )}
 
@@ -174,13 +176,13 @@ export default function Coach({ onNavigate }: { onNavigate: (section: "Workout" 
             <input
               value={input}
               onChange={(event) => setInput(event.target.value)}
-              placeholder="Ask about food, training, sleep, or habits…"
-              aria-label="Message the coach"
+              placeholder={tr("Ask about food, training, sleep, or habits…")}
+              aria-label={tr("Message the coach")}
               maxLength={800}
             />
-            <button type="submit" disabled={busy || !input.trim()} aria-label="Send message"><Send /></button>
+            <button type="submit" disabled={busy || !input.trim()} aria-label={tr("Send message")}><Send /></button>
           </form>
-          <p className="coach-disclaimer">General wellness support, not medical advice, diagnosis, or emergency care. If you are in immediate danger, call your local emergency number.</p>
+          <p className="coach-disclaimer">{tr("General wellness support, not medical advice, diagnosis, or emergency care. If you are in immediate danger, call your local emergency number.")}</p>
         </section>
       </div>
     </div>

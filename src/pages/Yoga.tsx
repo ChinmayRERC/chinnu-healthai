@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import ExerciseMedia from "../components/ExerciseMedia";
 import { useStore } from "../lib/store";
+import { useLocale } from "../lib/locale";
 import {
   categorizeYoga,
   filterYoga,
@@ -46,6 +47,7 @@ export default function Yoga({
   onStartTrainer: (id: string) => void;
 }) {
   const { data } = useStore();
+  const { tr } = useLocale();
   const [focus, setFocus] = useState<string>("all");
   const [muscle, setMuscle] = useState("");
   const [query, setQuery] = useState("");
@@ -91,33 +93,31 @@ export default function Yoga({
     <div className="page yoga-page">
       <section className="yoga-hero">
         <div className="yoga-hero-copy">
-          <span className="eyebrow">
-            <Flower2 /> YOGA · MOBILITY · BREATH
+            <span className="eyebrow">
+            <Flower2 /> {tr("YOGA · MOBILITY · BREATH")}
           </span>
           <h1>
-            Flow with intention,
+            {tr("Flow with intention,")}
             <br />
-            <em>move with ease.</em>
+            <em>{tr("move with ease.")}</em>
           </h1>
-          <p>
-            A calm library of yoga, mobility and stretching. Focus on form, hold with control, and build consistency — one breath at a time. {yogaLibrary.length} poses curated for your practice.
-          </p>
+          <p>{tr("A calm library of yoga, mobility and stretching. Focus on form, hold with control, and build consistency — one breath at a time.")} {yogaLibrary.length} {tr("poses curated for your practice.")}</p>
           <label className="explore-search yoga-search">
             <Search />
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search pose or muscle" aria-label="Search yoga poses" />
-            {query && <button onClick={() => setQuery("")} aria-label="Clear search"><X /></button>}
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tr("Search pose or muscle")} aria-label={tr("Search yoga poses")} />
+            {query && <button onClick={() => setQuery("")} aria-label={tr("Clear search")}><X /></button>}
           </label>
           <div className="yoga-meta">
-            <span><b>{allYoga.length}</b> poses</span>
-            <span><b>{YOGA_FOCUSES.filter((f) => f.id !== "all").length}</b> focuses</span>
-            <span><b>{allYoga.filter((ex) => ex.category === "stretching").length}</b> stretches</span>
+            <span><b>{allYoga.length}</b> {tr("poses")}</span>
+            <span><b>{YOGA_FOCUSES.filter((f) => f.id !== "all").length}</b> {tr("focuses")}</span>
+            <span><b>{allYoga.filter((ex) => ex.category === "stretching").length}</b> {tr("stretches")}</span>
           </div>
         </div>
         <div className="yoga-hero-panel">
           <div className="yoga-panel-head">
             <div>
-              <span className="eyebrow"><Wind /> PRACTICE PRINCIPLES</span>
-              <h3>Flow smarter</h3>
+              <span className="eyebrow"><Wind /> {tr("PRACTICE PRINCIPLES")}</span>
+              <h3>{tr("Flow smarter")}</h3>
             </div>
             <HeartPulse />
           </div>
@@ -125,27 +125,27 @@ export default function Yoga({
             <article>
               <b>01</b>
               <div>
-                <strong>Breathe first</strong>
-                <p>Move with your breath, not against it. Inhale to lengthen, exhale to deepen.</p>
+                <strong>{tr("Breathe first")}</strong>
+                <p>{tr("Move with your breath, not against it. Inhale to lengthen, exhale to deepen.")}</p>
               </div>
             </article>
             <article>
               <b>02</b>
               <div>
-                <strong>Go easy</strong>
-                <p>Use props, modify ranges, and never force a shape. Stability beats depth.</p>
+                <strong>{tr("Go easy")}</strong>
+                <p>{tr("Use props, modify ranges, and never force a shape. Stability beats depth.")}</p>
               </div>
             </article>
             <article>
               <b>03</b>
               <div>
-                <strong>Listen in</strong>
-                <p>Sharp pain, numbness or dizziness = stop and adjust. Safety is part of practice.</p>
+                <strong>{tr("Listen in")}</strong>
+                <p>{tr("Sharp pain, numbness or dizziness = stop and adjust. Safety is part of practice.")}</p>
               </div>
             </article>
           </div>
           <div className="yoga-panel-footer">
-            <span><Camera /> Form guidance available on select poses</span>
+            <span><Camera /> {tr("Form guidance available on select poses")}</span>
           </div>
         </div>
       </section>
@@ -153,16 +153,16 @@ export default function Yoga({
       <section className="yoga-focus-section">
         <div className="panel-head">
           <div>
-            <span className="eyebrow">CHOOSE YOUR FOCUS</span>
-            <h2>Practice by intention</h2>
+            <span className="eyebrow">{tr("CHOOSE YOUR FOCUS")}</span>
+            <h2>{tr("Practice by intention")}</h2>
           </div>
         </div>
         <div className="yoga-focus-grid">
           {YOGA_FOCUSES.map((f) => (
             <button key={f.id} className={`yoga-focus-card ${focus === f.id ? "active" : ""}`} onClick={() => setFocus(focus === f.id && f.id !== "all" ? "all" : f.id)}>
               <div>
-                <b>{f.label}</b>
-                <p>{f.desc}</p>
+                <b>{tr(f.label)}</b>
+                <p>{tr(f.desc)}</p>
               </div>
               {focus === f.id && <Sparkles />}
             </button>
@@ -173,8 +173,8 @@ export default function Yoga({
       <section className="yoga-featured">
         <div className="panel-head">
           <div>
-            <span className="eyebrow">START HERE</span>
-            <h2>Foundational poses</h2>
+            <span className="eyebrow">{tr("START HERE")}</span>
+            <h2>{tr("Foundational poses")}</h2>
           </div>
         </div>
         <div className="yoga-featured-grid">
@@ -183,7 +183,7 @@ export default function Yoga({
               <ExerciseMedia exercise={ex} variant="thumb" />
               <div>
                 <b>{ex.name}</b>
-                <small>{yogaRegionLabel(ex)} · {ex.equipment === "body only" ? "Bodyweight" : ex.equipment}</small>
+              <small>{tr(yogaRegionLabel(ex))} · {tr(ex.equipment === "body only" ? "Bodyweight" : ex.equipment)}</small>
               </div>
               <ArrowRight />
             </button>
@@ -193,30 +193,30 @@ export default function Yoga({
 
       <section className="library-section yoga-library" ref={resultsRef}>
         <div className="library-toolbar">
-          <div className="muscle-chips" role="group" aria-label="Filter by muscle region">
-            <button className={!muscle ? "active" : ""} onClick={() => setMuscle("")}>All muscles</button>
+          <div className="muscle-chips" role="group" aria-label={tr("Filter by muscle region")}>
+            <button className={!muscle ? "active" : ""} onClick={() => setMuscle("")}>{tr("All muscles")}</button>
             {MUSCLE_REGIONS.map((region) => (
               <button key={region} className={muscle === region ? "active" : ""} onClick={() => setMuscle(muscle === region ? "" : region)}>
-                {regionLabel(region)}
+                {tr(regionLabel(region))}
               </button>
             ))}
           </div>
           <div className="filter-row">
             <label className="select-wrap">
               <Filter />
-              <select value={equipment} onChange={(e) => setEquipment(e.target.value)} aria-label="Filter by props">
+              <select value={equipment} onChange={(e) => setEquipment(e.target.value)} aria-label={tr("Filter by props")}>
                 {EQUIPMENT_FILTERS.map(([v, l]) => (
-                  <option key={v} value={v}>{l}</option>
+                  <option key={v} value={v}>{tr(l)}</option>
                 ))}
               </select>
               <ChevronDown />
             </label>
             <label className="select-wrap">
-              <select value={level} onChange={(e) => setLevel(e.target.value)} aria-label="Filter by level">
-                <option value="">Any level</option>
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="expert">Advanced</option>
+              <select value={level} onChange={(e) => setLevel(e.target.value)} aria-label={tr("Filter by level")}>
+                <option value="">{tr("Any level")}</option>
+                <option value="beginner">{tr("Beginner")}</option>
+                <option value="intermediate">{tr("Intermediate")}</option>
+                <option value="expert">{tr("Advanced")}</option>
               </select>
               <ChevronDown />
             </label>
@@ -230,7 +230,7 @@ export default function Yoga({
 
         <div className="panel-head">
           <div>
-            <span className="eyebrow">POSE LIBRARY</span>
+            <span className="eyebrow">{tr("POSE LIBRARY")}</span>
             <h2>{filtered.length} poses</h2>
           </div>
           <span className="video-strip-note">
@@ -249,14 +249,14 @@ export default function Yoga({
                     <div className="library-card-body">
                       <div className="card-badges">
                         <span>{yogaRegionLabel(ex)}</span>
-                        {ex.category === "stretching" && <span>Stretch</span>}
-                        {tracked && <span className="camera-badge">Camera</span>}
+                        {ex.category === "stretching" && <span>{tr("Stretch")}</span>}
+                        {tracked && <span className="camera-badge">{tr("Camera")}</span>}
                       </div>
                       <h3>{ex.name}</h3>
                       <p>{ex.primaryMuscles.slice(0, 2).map(regionLabel).join(" · ")}{ex.secondaryMuscles.length ? ` + ${ex.secondaryMuscles.length}` : ""}</p>
                       <footer>
                         <span>{LEVEL_LABEL[ex.level]}</span>
-                        <span>{ex.equipment === "body only" ? "Bodyweight" : ex.equipment}</span>
+                        <span>{tr(ex.equipment === "body only" ? "Bodyweight" : ex.equipment)}</span>
                         <ArrowRight />
                       </footer>
                     </div>
@@ -276,9 +276,9 @@ export default function Yoga({
         ) : (
           <div className="empty-state large">
             <Search />
-            <h3>No poses match those filters</h3>
-            <p>Try a different focus, muscle, or search term.</p>
-            <button className="primary-btn" onClick={clearFilters}>Reset filters</button>
+            <h3>{tr("No poses match those filters")}</h3>
+            <p>{tr("Try a different focus, muscle, or search term.")}</p>
+            <button className="primary-btn" onClick={clearFilters}>{tr("Reset filters")}</button>
           </div>
         )}
       </section>

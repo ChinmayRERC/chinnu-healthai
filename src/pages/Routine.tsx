@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { useStore } from "../lib/store";
+import { useLocale } from "../lib/locale";
 import { generatePersonalRoutine, getRoutineForToday, getWeekDays, adaptRoutineWithAI } from "../lib/routine";
 import { getExercise, regionLabel } from "../lib/library";
 import ExerciseMedia from "../components/ExerciseMedia";
@@ -43,6 +44,7 @@ export default function Routine({
   onNotify: (message: string) => void;
 }) {
   const { data, setPersonalRoutine, markRoutineDay, update } = useStore();
+  const { tr } = useLocale();
   const [generating, setGenerating] = useState(false);
   const [adapting, setAdapting] = useState(false);
   const [showDetails, setShowDetails] = useState<number | null>(null);
@@ -58,7 +60,7 @@ export default function Routine({
     try {
       const r = await generatePersonalRoutine(data.profile, data);
       setPersonalRoutine(r);
-      onNotify("Your 7-day personalized routine is ready");
+      onNotify(tr("Your 7-day personalized routine is ready"));
     } finally {
       setGenerating(false);
     }
@@ -71,9 +73,9 @@ export default function Routine({
       const adapted = await adaptRoutineWithAI(routine, data);
       if (adapted) {
         setPersonalRoutine(adapted);
-        onNotify("Routine adapted to your recent activity");
+        onNotify(tr("Routine adapted to your recent activity"));
       } else {
-        onNotify("Using local adaptation for now");
+        onNotify(tr("Using local adaptation for now"));
       }
     } finally {
       setAdapting(false);
@@ -84,7 +86,7 @@ export default function Routine({
     if (!routine) return;
     const day = routine.days[dayIndex];
     if (day.isRest) {
-      onNotify("Rest day — recovery is part of progress");
+      onNotify(tr("Rest day — recovery is part of progress"));
       return;
     }
     // Load today's workout items
@@ -97,24 +99,24 @@ export default function Routine({
     <div className="page routine-page">
       <section className="routine-head">
         <div>
-          <span className="eyebrow"><CalendarRange /> 7-DAY PERSONAL ROUTINE</span>
-          <h1>Built for <em>you</em>, adjusted over time</h1>
-          <p>AI-driven plan based on your goals, experience, equipment, recovery, and recent activity. Each day is tailored to your energy and schedule.</p>
+          <span className="eyebrow"><CalendarRange /> {tr("7-DAY PERSONAL ROUTINE")}</span>
+          <h1>{tr("Built for")} <em>{tr("you")}</em>, {tr("adjusted over time")}</h1>
+          <p>{tr("AI-driven plan based on your goals, experience, equipment, recovery, and recent activity. Each day is tailored to your energy and schedule.")}</p>
         </div>
         <div className="routine-head-actions">
           {routine && (
             <>
               <button className="soft-btn" onClick={adapt} disabled={adapting}>
-                <Brain /> {adapting ? "Adapting..." : "Adapt with AI"}
+                <Brain /> {tr(adapting ? "Adapting..." : "Adapt with AI")}
               </button>
               <button className="soft-btn" onClick={generate} disabled={generating}>
-                <RefreshCw /> {generating ? "Regenerating..." : "Regenerate"}
+                <RefreshCw /> {tr(generating ? "Regenerating..." : "Regenerate")}
               </button>
             </>
           )}
           {!routine && (
             <button className="primary-btn" onClick={generate} disabled={generating}>
-              <Wand2 /> {generating ? "Building your plan..." : "Generate my 7-day routine"}
+              <Wand2 /> {tr(generating ? "Building your plan..." : "Generate my 7-day routine")}
             </button>
           )}
         </div>
@@ -124,16 +126,16 @@ export default function Routine({
         <section className="panel routine-hero">
           <div className="routine-hero-content">
             <Sparkles />
-            <h2>Let AI build your personal workout routine</h2>
-            <p>We'll analyze your profile, goals, experience, equipment, and current activity to create a balanced 7-day plan with strength, recovery, and progression built in.</p>
+            <h2>{tr("Let AI build your personal workout routine")}</h2>
+            <p>{tr("We'll analyze your profile, goals, experience, equipment, and current activity to create a balanced 7-day plan with strength, recovery, and progression built in.")}</p>
             <div className="routine-features">
-              <span><Target /> Goal-aligned</span>
-              <span><Dumbbell /> Equipment-aware</span>
-              <span><Clock3 /> Time-optimized</span>
-              <span><Flame /> Progressive overload</span>
+              <span><Target /> {tr("Goal-aligned")}</span>
+              <span><Dumbbell /> {tr("Equipment-aware")}</span>
+              <span><Clock3 /> {tr("Time-optimized")}</span>
+              <span><Flame /> {tr("Progressive overload")}</span>
             </div>
             <button className="primary-btn" onClick={generate} disabled={generating}>
-              <Wand2 /> {generating ? "Building..." : "Generate 7-day routine"}
+              <Wand2 /> {tr(generating ? "Building..." : "Generate 7-day routine")}
             </button>
           </div>
         </section>
@@ -145,12 +147,12 @@ export default function Routine({
             <section className="panel today-routine-card">
               <div className="today-routine-header">
                 <div>
-                  <span className="eyebrow"><Sparkles /> TODAY'S ROUTINE</span>
+                  <span className="eyebrow"><Sparkles /> {tr("TODAY'S ROUTINE")}</span>
                   <h2>{todayRoutine.title}</h2>
                   <p>{todayRoutine.rationale}</p>
                 </div>
                 <button className="primary-btn" onClick={() => startDay(todayIndex)}>
-                  <Play /> Start today's workout
+                  <Play /> {tr("Start today's workout")}
                 </button>
               </div>
               <div className="today-routine-preview">
@@ -176,8 +178,8 @@ export default function Routine({
           <section className="panel week-routine-panel">
             <header className="panel-head">
               <div>
-                <span className="eyebrow">YOUR WEEK</span>
-                <h2>7-day breakdown</h2>
+                <span className="eyebrow">{tr("YOUR WEEK")}</span>
+                <h2>{tr("7-day breakdown")}</h2>
               </div>
               {routine.aiReasoning && <p className="routine-ai-reason">{routine.aiReasoning}</p>}
             </header>
@@ -189,10 +191,10 @@ export default function Routine({
                   <article key={day.day} className={`week-day-card ${day.isRest ? 'rest' : ''} ${isToday ? 'today' : ''} ${done ? 'done' : ''}`}>
                     <header className="week-day-header">
                       <div>
-                        <span className="day-label">{day.day}</span>
-                        <b>{DAY_LABEL[day.day]}</b>
-                        {isToday && <span className="today-badge">Today</span>}
-                        {done && <span className="done-badge"><Check /> Done</span>}
+                        <span className="day-label">{tr(day.day)}</span>
+                        <b>{tr(DAY_LABEL[day.day])}</b>
+                        {isToday && <span className="today-badge">{tr("Today")}</span>}
+                        {done && <span className="done-badge"><Check /> {tr("Done")}</span>}
                       </div>
                       {!day.isRest && (
                         <button className="icon-btn" onClick={() => startDay(idx)}>
@@ -205,17 +207,17 @@ export default function Routine({
                       <p>{day.notes || day.rationale}</p>
                       {day.isRest ? (
                         <div className="rest-indicator">
-                          <span>Rest & Recovery</span>
-                          <small>Let your body repair and adapt</small>
+                          <span>{tr("Rest & Recovery")}</span>
+                          <small>{tr("Let your body repair and adapt")}</small>
                         </div>
                       ) : (
                         <>
                           <div className="day-stats">
-                            <span><Dumbbell /> {day.items.length} exercises</span>
+                            <span><Dumbbell /> {day.items.length} {tr("exercises")}</span>
                             <span><Clock3 /> ~{day.durationEst || 45} min</span>
                           </div>
                           <button className="text-btn" onClick={() => setShowDetails(idx)}>
-                            View details <ArrowRight />
+                            {tr("View details")} <ArrowRight />
                           </button>
                         </>
                       )}
@@ -231,7 +233,7 @@ export default function Routine({
       {showDetails !== null && routine && (
         <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setShowDetails(null)}>
           <div className="modal routine-detail-modal" role="dialog" aria-modal="true">
-            <button className="modal-close" onClick={() => setShowDetails(null)}><X /></button>
+            <button className="modal-close" onClick={() => setShowDetails(null)} aria-label={tr("Close")}><X /></button>
             <span className="modal-mark"><Dumbbell /></span>
             <span className="eyebrow">{routine.days[showDetails].day}</span>
             <h2>{routine.days[showDetails].title}</h2>
@@ -255,7 +257,7 @@ export default function Routine({
               })}
             </div>
             <button className="primary-btn wide" onClick={() => { setShowDetails(null); startDay(showDetails); }}>
-              <Play /> Start this day
+              <Play /> {tr("Start this day")}
             </button>
           </div>
         </div>

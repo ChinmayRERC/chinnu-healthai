@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { useStore } from "../lib/store";
+import { useLocale } from "../lib/locale";
 import { formatShortDate } from "../lib/profile";
 import { filterLibrary, FLAGSHIP_IDS, getExercise, LEVEL_LABEL, library, regionLabel, trackedExerciseFor } from "../lib/library";
 import { FOCUS_LABEL, generateRoutine, workoutTitle, type Focus } from "../lib/plan";
@@ -41,6 +42,7 @@ export default function Workout({
   onNavigateExplore: () => void;
 }) {
   const { data, setWorkout, addWorkoutItem, removeWorkoutItem, update } = useStore();
+  const { tr } = useLocale();
   const [showGenerate, setShowGenerate] = useState(data.workout.length === 0);
   const [focus, setFocus] = useState<Focus>("full");
   const [builderOpen, setBuilderOpen] = useState(false);
@@ -91,22 +93,22 @@ export default function Workout({
     <div className="page workout-page">
       <section className="workout-head-v2">
         <div>
-          <span className="eyebrow"><Sparkles /> YOUR ADAPTABLE PLAN</span>
-          <h1>Train with a plan,<br /><em>not a guess.</em></h1>
-          <p>{data.workout.length ? `${data.workout.length} exercises · ${estimates.sets} sets · about ${estimates.minutes} minutes. Adjust anything as your week changes.` : "Choose a focus and we will build a routine around your equipment, experience, and goal."}</p>
+          <span className="eyebrow"><Sparkles /> {tr("YOUR ADAPTABLE PLAN")}</span>
+          <h1>{tr("Train with a plan,")}<br /><em>{tr("not a guess.")}</em></h1>
+          <p>{data.workout.length ? `${data.workout.length} ${tr("exercises")} · ${estimates.sets} ${tr("sets")} · ${tr("about")} ${estimates.minutes} ${tr("minutes")}. ${tr("Adjust anything as your week changes.")}` : tr("Choose a focus and we will build a routine around your equipment, experience, and goal.")}</p>
         </div>
         <div className="workout-head-actions">
-          <button className="soft-btn" onClick={() => setShowGenerate((value) => !value)}><RefreshCw /> {data.workout.length ? "Regenerate" : "Build a plan"}</button>
-          <button className="primary-btn" disabled={!data.workout.length} onClick={onStartWorkout}><Play /> Start workout</button>
+          <button className="soft-btn" onClick={() => setShowGenerate((value) => !value)}><RefreshCw /> {tr(data.workout.length ? "Regenerate" : "Build a plan")}</button>
+          <button className="primary-btn" disabled={!data.workout.length} onClick={onStartWorkout}><Play /> {tr("Start workout")}</button>
         </div>
       </section>
 
       {showGenerate && (
         <section className="plan-builder-card">
           <div className="plan-builder-copy">
-            <span className="eyebrow">ONE-TAP PLAN</span>
-            <h2>What do you want to train?</h2>
-            <p>We use your profile and available equipment. You can swap any movement afterwards.</p>
+            <span className="eyebrow">{tr("ONE-TAP PLAN")}</span>
+            <h2>{tr("What do you want to train?")}</h2>
+            <p>{tr("We use your profile and available equipment. You can swap any movement afterwards.")}</p>
           </div>
           <div className="plan-focus-grid">
             {FOCUSES.map((option) => (
@@ -118,10 +120,10 @@ export default function Workout({
             ))}
           </div>
           <div className="plan-builder-footer">
-            <small><Target /> {data.profile.experience === "beginner" ? "Beginner-friendly volume" : `${data.profile.experience} volume`} · {data.profile.equipment.length ? data.profile.equipment.join(", ") : "bodyweight"}</small>
+            <small><Target /> {data.profile.experience === "beginner" ? tr("Beginner-friendly volume") : tr(`${data.profile.experience} volume`)} · {data.profile.equipment.length ? data.profile.equipment.join(", ") : tr("bodyweight")}</small>
             <div>
-              <button className="text-btn" onClick={() => setShowGenerate(false)}>Cancel</button>
-              <button className="primary-btn" onClick={() => buildPlan()}><Sparkles /> Build my plan</button>
+              <button className="text-btn" onClick={() => setShowGenerate(false)}>{tr("Cancel")}</button>
+              <button className="primary-btn" onClick={() => buildPlan()}><Sparkles /> {tr("Build my plan")}</button>
             </div>
           </div>
         </section>
@@ -131,8 +133,8 @@ export default function Workout({
         <div className="workout-main">
           <section className="panel">
             <header className="panel-head">
-              <div><span className="eyebrow">YOUR ROUTINE</span><h2>{data.workout.length ? `${data.workout.length} exercises` : "A blank slate"}</h2></div>
-              <button className="text-btn" onClick={() => setBuilderOpen(true)}><Plus /> Add exercise</button>
+              <div><span className="eyebrow">{tr("YOUR ROUTINE")}</span><h2>{data.workout.length ? `${data.workout.length} ${tr("exercises")}` : tr("A blank slate")}</h2></div>
+              <button className="text-btn" onClick={() => setBuilderOpen(true)}><Plus /> {tr("Add exercise")}</button>
             </header>
 
             {data.workout.length ? (
@@ -151,11 +153,11 @@ export default function Workout({
                         <b>{exercise.name}</b>
                         <small>{regionLabel(exercise.region)} · {exercise.equipment} · {LEVEL_LABEL[exercise.level]}</small>
                       </button>
-                      <label className="routine-field">SETS<input type="number" min="1" max="10" value={item.sets} onChange={(event) => changeItem(index, { sets: Math.max(1, Math.min(10, Number(event.target.value) || 1)) })} /></label>
-                      <label className="routine-field">{item.targetType === "seconds" ? "SECONDS" : "REPS"}<input type="number" min="1" max="600" value={item.target} onChange={(event) => changeItem(index, { target: Math.max(1, Math.min(600, Number(event.target.value) || 1)) })} /></label>
+                      <label className="routine-field">{tr("SETS")}<input type="number" min="1" max="10" value={item.sets} onChange={(event) => changeItem(index, { sets: Math.max(1, Math.min(10, Number(event.target.value) || 1)) })} /></label>
+                      <label className="routine-field">{tr(item.targetType === "seconds" ? "SECONDS" : "REPS")}<input type="number" min="1" max="600" value={item.target} onChange={(event) => changeItem(index, { target: Math.max(1, Math.min(600, Number(event.target.value) || 1)) })} /></label>
                       <div className="routine-actions">
-                        {tracked && <button className="icon-btn" onClick={() => onTrain(exercise.id)} title="Open camera form coach"><Camera /></button>}
-                        <button className="icon-btn danger" onClick={() => { removeWorkoutItem(exercise.id); onNotify(`${exercise.name} removed`); }} title={`Remove ${exercise.name}`}><Trash2 /></button>
+                        {tracked && <button className="icon-btn" onClick={() => onTrain(exercise.id)} title={tr("Open camera form coach")}><Camera /></button>}
+                        <button className="icon-btn danger" onClick={() => { removeWorkoutItem(exercise.id); onNotify(`${exercise.name} ${tr("removed")}`); }} title={`${tr("Remove")} ${exercise.name}`}><Trash2 /></button>
                       </div>
                     </article>
                   );
@@ -164,30 +166,30 @@ export default function Workout({
             ) : (
               <div className="routine-empty">
                 <span className="empty-icon"><Dumbbell /></span>
-                <h3>Your routine is empty.</h3>
-                <p>Build a balanced plan in one tap, or add individual exercises from the library.</p>
-                <div><button className="primary-btn" onClick={() => setShowGenerate(true)}><Sparkles /> Build a plan</button><button className="soft-btn" onClick={() => setBuilderOpen(true)}><Plus /> Add exercise</button></div>
+                <h3>{tr("Your routine is empty.")}</h3>
+                <p>{tr("Build a balanced plan in one tap, or add individual exercises from the library.")}</p>
+                <div><button className="primary-btn" onClick={() => setShowGenerate(true)}><Sparkles /> {tr("Build a plan")}</button><button className="soft-btn" onClick={() => setBuilderOpen(true)}><Plus /> {tr("Add exercise")}</button></div>
               </div>
             )}
 
             {data.workout.length > 0 && (
-              <button className="add-exercise-row" onClick={() => setBuilderOpen(true)}><Plus /> Add another exercise <ArrowRight /></button>
+              <button className="add-exercise-row" onClick={() => setBuilderOpen(true)}><Plus /> {tr("Add another exercise")} <ArrowRight /></button>
             )}
           </section>
 
           <section className="panel warmup-panel">
             <span className="warmup-icon"><Flame /></span>
             <div>
-              <span className="eyebrow">5-MINUTE WARM-UP</span>
-              <h2>Make the first set feel easier.</h2>
-              <p>Walk or march in place for 2 minutes, then do 8 slow bodyweight squats, 8 arm circles, and 10 gentle hip hinges.</p>
+              <span className="eyebrow">{tr("5-MINUTE WARM-UP")}</span>
+              <h2>{tr("Make the first set feel easier.")}</h2>
+              <p>{tr("Walk or march in place for 2 minutes, then do 8 slow bodyweight squats, 8 arm circles, and 10 gentle hip hinges.")}</p>
             </div>
-            <button className="text-btn" onClick={onStartWorkout} disabled={!data.workout.length}><Play /> Start</button>
+            <button className="text-btn" onClick={onStartWorkout} disabled={!data.workout.length}><Play /> {tr("Start")}</button>
           </section>
 
           <section className="panel">
             <header className="panel-head">
-              <div><span className="eyebrow">RECENT SESSIONS</span><h2>Workout history</h2></div>
+              <div><span className="eyebrow">{tr("RECENT SESSIONS")}</span><h2>{tr("Workout history")}</h2></div>
               <span className="history-count">{data.workoutLogs.length} logged</span>
             </header>
             {data.workoutLogs.length ? (
@@ -201,54 +203,54 @@ export default function Workout({
                 ))}
               </div>
             ) : (
-              <div className="mini-empty"><Trophy /><p>Complete your first session and it will appear here.</p></div>
+              <div className="mini-empty"><Trophy /><p>{tr("Complete your first session and it will appear here.")}</p></div>
             )}
           </section>
         </div>
 
         <aside className="workout-rail">
           <article className="panel session-summary">
-            <span className="eyebrow">SESSION SNAPSHOT</span>
-            <h2>{data.workout.length ? workoutTitle(focus) : "Ready when you are"}</h2>
+            <span className="eyebrow">{tr("SESSION SNAPSHOT")}</span>
+            <h2>{data.workout.length ? tr(workoutTitle(focus)) : tr("Ready when you are")}</h2>
             <div className="summary-stats">
-              <span><Clock3 /><b>{estimates.minutes}</b><small>minutes est.</small></span>
-              <span><Dumbbell /><b>{estimates.sets}</b><small>total sets</small></span>
-              <span><Target /><b>{data.workout.reduce((sum, item) => sum + item.target, 0)}</b><small>target reps</small></span>
+              <span><Clock3 /><b>{estimates.minutes}</b><small>{tr("minutes est.")}</small></span>
+              <span><Dumbbell /><b>{estimates.sets}</b><small>{tr("total sets")}</small></span>
+              <span><Target /><b>{data.workout.reduce((sum, item) => sum + item.target, 0)}</b><small>{tr("target reps")}</small></span>
             </div>
             <div className="summary-note"><Sparkles /><p>{data.profile.experience === "beginner" ? "Leave 2–3 reps in reserve and stop each set while form still feels solid." : "Keep 1–2 reps in reserve on most sets. Add load gradually, not every session."}</p></div>
-            <button className="primary-btn wide" onClick={onStartWorkout} disabled={!data.workout.length}><Play /> Start workout</button>
-            <button className="text-btn wide" onClick={() => setShowGenerate(true)}><RefreshCw /> Change focus</button>
+            <button className="primary-btn wide" onClick={onStartWorkout} disabled={!data.workout.length}><Play /> {tr("Start workout")}</button>
+            <button className="text-btn wide" onClick={() => setShowGenerate(true)}><RefreshCw /> {tr("Change focus")}</button>
           </article>
 
           <article className="panel rail-tip">
             <span className="rail-tip-icon"><Target /></span>
-            <span className="eyebrow">TODAY&apos;S TARGET</span>
-            <h3>{data.profile.goal === "lose" ? "Keep the muscle you have." : data.profile.goal === "gain" ? "Add a little load." : data.profile.goal === "strength" ? "Quality reps first." : "Move consistently."}</h3>
-            <p>{data.profile.goal === "lose" ? "Protein and strength work protect muscle while the scale moves slowly." : data.profile.goal === "gain" ? "A small surplus and progressive sets beat a perfect plan you cannot repeat." : "A session that fits your energy today is better than one you skip."}</p>
+            <span className="eyebrow">{tr("TODAY'S TARGET")}</span>
+            <h3>{tr(data.profile.goal === "lose" ? "Keep the muscle you have." : data.profile.goal === "gain" ? "Add a little load." : data.profile.goal === "strength" ? "Quality reps first." : "Move consistently.")}</h3>
+            <p>{tr(data.profile.goal === "lose" ? "Protein and strength work protect muscle while the scale moves slowly." : data.profile.goal === "gain" ? "A small surplus and progressive sets beat a perfect plan you cannot repeat." : "A session that fits your energy today is better than one you skip.")}</p>
           </article>
 
           <article className="panel rail-tip">
             <span className="rail-tip-icon camera"><Camera /></span>
-            <span className="eyebrow">FORM COACH</span>
-            <h3>{library.filter((exercise) => exercise.trackedId).length} camera-guided movements</h3>
-            <p>Pose tracking runs on your device. It estimates reps and visible angles; it cannot judge load, pain, or spinal position.</p>
-            <button className="text-btn" onClick={onNavigateExplore}>Browse movements <ArrowRight /></button>
+            <span className="eyebrow">{tr("FORM COACH")}</span>
+            <h3>{library.filter((exercise) => exercise.trackedId).length} {tr("camera-guided movements")}</h3>
+            <p>{tr("Pose tracking runs on your device. It estimates reps and visible angles; it cannot judge load, pain, or spinal position.")}</p>
+            <button className="text-btn" onClick={onNavigateExplore}>{tr("Browse movements")} <ArrowRight /></button>
           </article>
         </aside>
       </div>
 
       {builderOpen && (
         <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setBuilderOpen(false)}>
-          <div className="modal exercise-picker" role="dialog" aria-modal="true" aria-label="Add an exercise">
-            <button className="modal-close" onClick={() => setBuilderOpen(false)} aria-label="Close exercise picker"><X /></button>
+          <div className="modal exercise-picker" role="dialog" aria-modal="true" aria-label={tr("Add an exercise")}>
+            <button className="modal-close" onClick={() => setBuilderOpen(false)} aria-label={tr("Close exercise picker")}><X /></button>
             <span className="modal-mark"><Dumbbell /></span>
-            <span className="eyebrow">ADD TO YOUR PLAN</span>
-            <h2>Pick a movement</h2>
+            <span className="eyebrow">{tr("ADD TO YOUR PLAN")}</span>
+            <h2>{tr("Pick a movement")}</h2>
             <p>Suggested for your equipment and goal. Search all {library.length} exercises if you want something else.</p>
             <label className="search-input">
               <Search />
-              <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search exercise or muscle" aria-label="Search exercises to add" />
-              {query && <button onClick={() => setQuery("")} aria-label="Clear search"><X /></button>}
+              <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder={tr("Search exercise or muscle")} aria-label={tr("Search exercises to add")} />
+              {query && <button onClick={() => setQuery("")} aria-label={tr("Clear search")}><X /></button>}
             </label>
             <div className="picker-results">
               {suggestions.map((exercise) => (
@@ -258,9 +260,9 @@ export default function Workout({
                   <Plus />
                 </button>
               ))}
-              {!suggestions.length && <div className="mini-empty"><Search /><p>No more matching exercises. Try another search or browse the full library.</p></div>}
+              {!suggestions.length && <div className="mini-empty"><Search /><p>{tr("No more matching exercises. Try another search or browse the full library.")}</p></div>}
             </div>
-            <button className="soft-btn wide" onClick={() => { setBuilderOpen(false); onNavigateExplore(); }}>Browse all exercises <ArrowRight /></button>
+            <button className="soft-btn wide" onClick={() => { setBuilderOpen(false); onNavigateExplore(); }}>{tr("Browse all exercises")} <ArrowRight /></button>
           </div>
         </div>
       )}
