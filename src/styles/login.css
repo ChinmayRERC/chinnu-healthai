@@ -10,3 +10,5 @@
 @media(max-width:370px){.login-oauth{grid-template-columns:1fr}.login-guest{display:block}.login-guest p{max-width:none}.login-guest button{padding:12px 0 0}}
 
 .profile-legal-links{display:flex;align-items:center;gap:18px;margin:14px 0 0;padding:15px 2px;border-top:1px solid #e2e7db;color:#899182;font-size:9px}.profile-legal-links span{margin-right:auto}.profile-legal-links button{border:0;background:none;color:#657454;font-size:9px;text-decoration:underline;text-underline-offset:3px}
+
+.login-consent input[type="checkbox"]{appearance:auto;width:16px;height:16px;min-width:16px;min-height:16px;padding:0;margin:2px 0 0;border:0;border-radius:3px;background:transparent;box-shadow:none;accent-color:#628a3a;flex:none}
