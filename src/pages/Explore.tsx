@@ -13,6 +13,7 @@ import {
 import AnatomyFigure from "../AnatomyFigure";
 import ExerciseMedia from "../components/ExerciseMedia";
 import { useStore } from "../lib/store";
+import { useLocale } from "../lib/locale";
 import type { Gender } from "../types";
 import {
   filterLibrary,
@@ -46,6 +47,7 @@ export default function Explore({
   onOpenVideo: (id: string) => void;
 }) {
   const { data } = useStore();
+  const { tr } = useLocale();
   const [muscle, setMuscle] = useState("");
   const [query, setQuery] = useState("");
   const [equipment, setEquipment] = useState("");
@@ -90,45 +92,45 @@ export default function Explore({
     <div className="page explore-page">
       <section className="explore-hero">
         <div className="explore-copy">
-          <span className="eyebrow"><Sparkles /> THE MOVEMENT LIBRARY</span>
-          <h1>Find a movement<br /><em>that fits your day.</em></h1>
+          <span className="eyebrow"><Sparkles /> {tr("THE MOVEMENT LIBRARY")}</span>
+          <h1>{tr("Find a movement")}<br /><em>{tr("that fits your day.")}</em></h1>
           <p>{library.length} exercises with clear photos, simple instructions, and equipment filters. Start with a video demo or tap a body area.</p>
           <label className="explore-search">
             <Search />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search exercise or muscle" aria-label="Search exercises" />
-            {query && <button onClick={() => setQuery("")} aria-label="Clear search"><X /></button>}
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={tr("Search exercise or muscle")} aria-label={tr("Search exercises")} />
+            {query && <button onClick={() => setQuery("")} aria-label={tr("Clear search")}><X /></button>}
           </label>
           <div className="explore-meta">
-            <span><b>{filtered.length}</b> matching exercises</span>
+            <span><b>{filtered.length}</b> {tr("matching exercises")}</span>
             <span><b>{FLAGSHIP_IDS.length}</b> video demos</span>
-            <span><b>{library.filter((exercise) => exercise.trackedId).length}</b> camera-guided</span>
+            <span><b>{library.filter((exercise) => exercise.trackedId).length}</b> {tr("camera-guided")}</span>
           </div>
         </div>
         <div className="explore-body-card">
-          <div className="body-toggle" role="group" aria-label="Choose anatomy figure">
-            <button className={bodyGender === "male" ? "active" : ""} aria-pressed={bodyGender === "male"} onClick={() => setBodyGender("male")}>Male</button>
-            <button className={bodyGender === "female" ? "active" : ""} aria-pressed={bodyGender === "female"} onClick={() => setBodyGender("female")}>Female</button>
+          <div className="body-toggle" role="group" aria-label={tr("Choose anatomy figure")}>
+            <button className={bodyGender === "male" ? "active" : ""} aria-pressed={bodyGender === "male"} onClick={() => setBodyGender("male")}>{tr("Male")}</button>
+            <button className={bodyGender === "female" ? "active" : ""} aria-pressed={bodyGender === "female"} onClick={() => setBodyGender("female")}>{tr("Female")}</button>
           </div>
           <div className="anatomy-pair">
             <div className="anatomy-view">
-              <span>Front</span>
+              <span>{tr("Front")}</span>
               <AnatomyFigure gender={bodyGender} view="Front" selected={muscle} onSelect={chooseRegion} />
             </div>
             <div className="anatomy-view">
-              <span>Back</span>
+              <span>{tr("Back")}</span>
               <AnatomyFigure gender={bodyGender} view="Back" selected={muscle} onSelect={chooseRegion} />
             </div>
           </div>
           <div className="body-card-footer">
-            <small>{muscle ? `Showing ${regionLabel(muscle)}` : "Tap a muscle to filter"}</small>
-            {muscle && <button onClick={() => setMuscle("")}>Clear <X /></button>}
+            <small>{muscle ? `${tr("Showing")} ${regionLabel(muscle)}` : tr("Tap a muscle to filter")}</small>
+            {muscle && <button onClick={() => setMuscle("")}>{tr("Clear")} <X /></button>}
           </div>
         </div>
       </section>
 
       <section className="video-strip-section">
-        <div className="panel-head">
-          <div><span className="eyebrow">VERIFIED IN-APP DEMOS</span><h2>Watch before you try</h2></div>
+          <div className="panel-head">
+          <div><span className="eyebrow">{tr("VERIFIED IN-APP DEMOS")}</span><h2>{tr("Watch before you try")}</h2></div>
           <span className="video-strip-note"><Video /> {FLAGSHIP_IDS.length} flagship videos</span>
         </div>
         <div className="video-strip">
@@ -147,8 +149,8 @@ export default function Explore({
 
       <section className="library-section" ref={resultsRef}>
         <div className="library-toolbar">
-          <div className="muscle-chips" role="group" aria-label="Filter by muscle region">
-            <button className={!muscle ? "active" : ""} onClick={() => setMuscle("")}>All</button>
+          <div className="muscle-chips" role="group" aria-label={tr("Filter by muscle region")}>
+            <button className={!muscle ? "active" : ""} onClick={() => setMuscle("")}>{tr("All")}</button>
             {MUSCLE_REGIONS.map((region) => (
               <button key={region} className={muscle === region ? "active" : ""} onClick={() => setMuscle(muscle === region ? "" : region)}>
                 {regionLabel(region)}
@@ -158,21 +160,21 @@ export default function Explore({
           <div className="filter-row">
             <label className="select-wrap">
               <Filter />
-              <select value={equipment} onChange={(event) => setEquipment(event.target.value)} aria-label="Filter by equipment">
+              <select value={equipment} onChange={(event) => setEquipment(event.target.value)} aria-label={tr("Filter by equipment")}>
                 {EQUIPMENT_FILTERS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </select>
               <ChevronDown />
             </label>
             <label className="select-wrap">
-              <select value={level} onChange={(event) => setLevel(event.target.value)} aria-label="Filter by level">
-                <option value="">Any level</option>
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="expert">Advanced</option>
+              <select value={level} onChange={(event) => setLevel(event.target.value)} aria-label={tr("Filter by level")}>
+                <option value="">{tr("Any level")}</option>
+                <option value="beginner">{tr("Beginner")}</option>
+                <option value="intermediate">{tr("Intermediate")}</option>
+                <option value="expert">{tr("Advanced")}</option>
               </select>
               <ChevronDown />
             </label>
-            {hasFilters && <button className="text-btn" onClick={clearFilters}><RotateCcw /> Clear filters</button>}
+            {hasFilters && <button className="text-btn" onClick={clearFilters}><RotateCcw /> {tr("Clear filters")}</button>}
           </div>
         </div>
 
@@ -185,8 +187,8 @@ export default function Explore({
                   <div className="library-card-body">
                     <div className="card-badges">
                       <span>{regionLabel(exercise.region)}</span>
-                      {exercise.youtube && <span className="video-badge"><Play /> Video</span>}
-                      {exercise.trackedId && <span className="camera-badge">Camera</span>}
+                      {exercise.youtube && <span className="video-badge"><Play /> {tr("Video")}</span>}
+                      {exercise.trackedId && <span className="camera-badge">{tr("Camera")}</span>}
                     </div>
                     <h3>{exercise.name}</h3>
                     <p>{exercise.primaryMuscles.slice(0, 2).map(regionFor).join(" · ")}{exercise.secondaryMuscles.length ? ` + ${exercise.secondaryMuscles.length}` : ""}</p>
@@ -200,16 +202,16 @@ export default function Explore({
               ))}
             </div>
             <div className="load-more-row">
-              <p>Showing {shown.length} of {ordered.length} exercises</p>
-              {visible < ordered.length && <button className="soft-btn" onClick={() => setVisible((count) => count + PAGE_SIZE)}>Load more <ArrowRight /></button>}
+              <p>{tr("Showing")} {shown.length} / {ordered.length}</p>
+              {visible < ordered.length && <button className="soft-btn" onClick={() => setVisible((count) => count + PAGE_SIZE)}>{tr("Load more")} <ArrowRight /></button>}
             </div>
           </>
         ) : (
           <div className="empty-state large">
             <Search />
-            <h3>No exercises match those filters.</h3>
-            <p>Try a different muscle, equipment type, or a simpler search.</p>
-            <button className="primary-btn" onClick={clearFilters}>Reset filters</button>
+            <h3>{tr("No exercises match those filters.")}</h3>
+            <p>{tr("Try a different muscle, equipment type, or a simpler search.")}</p>
+            <button className="primary-btn" onClick={clearFilters}>{tr("Reset filters")}</button>
           </div>
         )}
       </section>
