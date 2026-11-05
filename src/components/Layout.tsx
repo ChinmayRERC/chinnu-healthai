@@ -36,16 +36,17 @@ export const NAV: { label: Section; icon: typeof Home }[] = [
 ];
 
 export function Brand() {
+  const { tr } = useLocale();
   return (
     <span className="brand-lockup">
       <span className="brand-mark"><HeartPulse /></span>
-      <span><b>CHINNU</b><small>HEALTH + MOVEMENT</small></span>
+      <span><b>CHINNU</b><small>{tr("HEALTH + MOVEMENT")}</small></span>
     </span>
   );
 }
 
 export function CloudBadge({ status, compact = false, onClick }: { status: CloudStatus; compact?: boolean; onClick?: () => void }) {
-  const { t } = useLocale();
+  const { t, tr } = useLocale();
   const map: Record<CloudStatus, { label: string; icon: typeof Cloud }> = {
     local: { label: t("cloudLocal"), icon: CloudOff },
     connecting: { label: t("cloudConnecting"), icon: LoaderCircle },
@@ -76,14 +77,14 @@ export function Sidebar({
   cloudStatus: CloudStatus;
   onProfile: () => void;
 }) {
-  const { t } = useLocale();
+  const { t, tr } = useLocale();
   const initial = (profile.name || "You").trim().charAt(0).toUpperCase();
   return (
     <aside className="sidebar">
-      <button className="brand" onClick={() => onNavigate("Today")} aria-label="Go to Today">
+      <button className="brand" onClick={() => onNavigate("Today")} aria-label={tr("Go to Today")}>
         <Brand />
       </button>
-      <nav aria-label="Main navigation">
+      <nav aria-label={tr("Main navigation")}>
         {NAV.map(({ label, icon: Icon }) => (
           <button key={label} className={section === label ? "active" : ""} aria-current={section === label ? "page" : undefined} onClick={() => onNavigate(label)}>
             <Icon /> {t(sectionKey(label))}
@@ -124,7 +125,7 @@ export function Topbar({
   cloudStatus: CloudStatus;
   onProfile: () => void;
 }) {
-  const { locale, t } = useLocale();
+  const { locale, t, tr } = useLocale();
   const today = new Intl.DateTimeFormat(locale === "hi" ? "hi-IN" : locale === "kn" ? "kn-IN" : "en", { weekday: "short", day: "numeric", month: "short" }).format(new Date());
   return (
     <header className="topbar">
@@ -137,7 +138,7 @@ export function Topbar({
       <div className="topbar-actions">
         <LanguageSelect compact />
         <CloudBadge status={cloudStatus} compact onClick={onProfile} />
-        <button className="avatar" onClick={onProfile} aria-label="Open profile">
+        <button className="avatar" onClick={onProfile} aria-label={tr("Open profile")}>
           {(profile.name || "You").trim().charAt(0).toUpperCase() || <UserRound />}
         </button>
       </div>
@@ -146,9 +147,9 @@ export function Topbar({
 }
 
 export function BottomNav({ section, onNavigate }: { section: Section; onNavigate: (section: Section) => void }) {
-  const { t } = useLocale();
+  const { t, tr } = useLocale();
   return (
-    <nav className="bottom-nav" aria-label="Primary navigation">
+    <nav className="bottom-nav" aria-label={tr("Primary navigation")}>
       {NAV.filter((item) => item.label !== "Profile").map(({ label, icon: Icon }) => (
         <button key={label} className={section === label ? "active" : ""} aria-current={section === label ? "page" : undefined} onClick={() => onNavigate(label)}>
           <Icon /><small>{t(sectionKey(label))}</small>

@@ -49,7 +49,7 @@ function Shell() {
     addTrainingSession,
     setWorkout,
   } = useStore();
-  const { t } = useLocale();
+  const { t, tr } = useLocale();
   const [localMode, setLocalMode] = useState(() => {
     try { return localStorage.getItem(LOCAL_MODE_KEY) === "1"; } catch { return false; }
   });
@@ -199,7 +199,7 @@ function Shell() {
 
   return (
     <>
-      <a className="skip-to-content" href="#main-content">Skip to content</a>
+      <a className="skip-to-content" href="#main-content">{tr("Skip to content")}</a>
       <div className="app-shell">
         <Sidebar
           section={activeSection}
@@ -368,10 +368,10 @@ function Shell() {
       )}
 
       {trainerId && trainerExercise && (
-        <div className="trainer-overlay" role="dialog" aria-modal="true" aria-label={`${trainerExercise.name} camera coach`}>
+        <div className="trainer-overlay" role="dialog" aria-modal="true" aria-label={`${trainerExercise.name} ${tr("Camera coach")}`}>
           <div className="trainer-overlay-bar">
-            <span><HeartPulse /> On-device camera coach</span>
-            <button className="soft-btn" onClick={() => setTrainerId(null)}><X /> Close</button>
+            <span><HeartPulse /> {tr("On-device camera coach")}</span>
+            <button className="soft-btn" onClick={() => setTrainerId(null)}><X /> {tr("Close")}</button>
           </div>
           <Trainer
             exercise={trainerExercise}
@@ -388,11 +388,11 @@ function Shell() {
 
       {exitConfirm && (
         <ConfirmModal
-          title="Leave this session?"
-          description="Nothing from this workout will be saved. Your plan stays exactly as it is."
-          confirmLabel="Leave without saving"
+          title={tr("Leave this session?")}
+          description={tr("Nothing from this workout will be saved. Your plan stays exactly as it is.")}
+          confirmLabel={tr("Leave without saving")}
           onClose={() => setExitConfirm(false)}
-          onConfirm={() => { setPlayerItems(null); setExitConfirm(false); notify("Workout ended without saving"); }}
+          onConfirm={() => { setPlayerItems(null); setExitConfirm(false); notify(tr("Workout ended without saving")); }}
         />
       )}
 
